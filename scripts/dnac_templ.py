@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 from datetime import datetime
+import json
 import logging
 import os
 import re
@@ -24,7 +25,8 @@ class DNACTemplate(object):
         self.template_dir = os.path.join(os.path.dirname(__file__), '../dnac-templates')
         # login to DNAC
         self.dnac = api.DNACenterAPI(**self.config.dnac)
-        self.template_project_id = self.get_project_id()
+        # get project id, create if not there
+        self.template_project_id = self.get_project_id(self.config.template_project)
 
     def _read_config(self, config_file):
         if config_file is None:
@@ -39,14 +41,20 @@ class DNACTemplate(object):
                     attrs['dnac'][k] = os.environ.get(m.group(1))
         self.config = AttrDict(attrs)
 
-    def get_project_id(self):
+    def get_project_id(self, project):
         '''
-        Retrieve the project ID as we need it in various places
+        Retrieve the project ID as we need it in various places. If
+        Project doesn't exist, create it
         '''
         for p in self.dnac.configuration_templates.get_projects():
-            if p.name == self.config.template_project:
+            if p.name == project:
                 return p.id
-        raise Exception('template_project not found on DNAC')
+
+        task = self.dnac.configuration_templates.create_project(name=project)
+        project_id = self.wait_and_check_status(task)
+        if not project_id:
+            raise Exception('Creation of project "{}" failed'.format(project))
+        return project_id
 
     def retrieve_provisioned_templates(self):
         '''
@@ -106,13 +114,20 @@ class DNACTemplate(object):
             raise Exception()
         return result
 
-    def provision_templates(self, purge=True):
+    def provision_templates(self, purge=True, result_json=None):
         '''
         Push all templates found in our git repo to DNAC
         TODL Templates which have previously provisioned but which have been removed
         on git are also removed from DNAC
         '''
         errors = 0
+        results = {
+            'message': 'DNAC template provisioning run from {} UTC'.format(datetime.utcnow()),
+            'created': 0,
+            'updated': 0,
+            'skipped': 0,
+            'deleted': 0,
+        }
 
         # first remember which customers are currently provisioned so we can
         # handle deletion of the whole customer file
@@ -127,7 +142,13 @@ class DNACTemplate(object):
         pushed_templates = []
 
         # process all the templates found in the repo
-        for template_file in os.listdir(self.template_dir):
+        # assume no files if directory doesn't exist
+        if os.path.isdir(self.template_dir):
+            all_files = os.listdir(self.template_dir)
+        else:
+            all_files = []
+
+        for template_file in all_files:
             logger.debug('processing file "{}"'.format(template_file))
 
             with open(os.path.join(self.template_dir, template_file), 'r') as fd:
@@ -156,13 +177,14 @@ class DNACTemplate(object):
                 logger.info('Creating template "{}"'.format(template_name))
                 logger.debug(params)
                 response = self.dnac.configuration_templates.create_template(**params)
-
+                results['created'] += 1
             else:
                 # check if content changed
                 if template_content == current_template.templateContent:
                     logger.info('No change in template "{}", no update needed'.format(template_name))
                     # mark it so we don't delete it at the end
                     pushed_templates.append(template_name)
+                    results['skipped'] += 1
                     continue
 
                 logger.info('Updating template "{}"'.format(template_name))
@@ -179,6 +201,7 @@ class DNACTemplate(object):
                 }
                 logger.debug(params)
                 response = self.dnac.configuration_templates.update_template(current_template.id, **params)
+                results['updated'] += 1
 
             # check task and retrieve the template_id
             template_id = self.wait_and_check_status(response)
@@ -200,9 +223,14 @@ class DNACTemplate(object):
                 if purge is True:
                     logger.info('deleting template "{}"'.format(k))
                     self.dnac.configuration_templates.delete_template(v.id)
+                    results['deleted'] += 1
                 else:
                     logger.info('Not attempting to purge template "{}"'.format(k))
 
+        if result_json:
+            logger.info('Writing results to {}'.format(result_json))
+            with open(result_json, 'w') as fd:
+                fd.write(json.dumps(results, indent=2) + '\n')
         return errors == 0
 
 
@@ -210,6 +238,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Provision DNAC templates')
     parser.add_argument('--debug', action='store_true', help='print more debugging output')
     parser.add_argument('--config', help='config file to use')
+    parser.add_argument('--results', help='save results in json in this file (default: no file is created)')
     parser.add_argument('--nopurge', action="store_true", help='Don\'t delete templates found on DNAC which are not in the repo')
     args = parser.parse_args()
 
@@ -219,5 +248,5 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.INFO)
 
     service = DNACTemplate(config_file=args.config)
-    result = service.provision_templates(purge=not args.nopurge)
+    result = service.provision_templates(purge=not args.nopurge, result_json=args.results)
     sys.exit(0 if result else 1)
