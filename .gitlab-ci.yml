@@ -1,4 +1,5 @@
-
+# vars in gitlab-ci env:
+# RUNNER_IMAGE: dockerhub.cisco.com/as-dev-docker-local/cisco/cleur21_semops21:v1
 stages:
   - test
   - deploy
@@ -9,7 +10,7 @@ validate:
   image: ${RUNNER_IMAGE}
   stage: test
   script:
-    - env | grep DNAC
+    - env
     - echo TODO
 
 commit_prod:
@@ -18,7 +19,7 @@ commit_prod:
   # only:
   #   - master
   script:
-    - env | grep DNAC
+    - env
     - python scripts/dnac_templ.py --debug
 
 # test:
