@@ -1,6 +1,6 @@
 
 stages:
-  # - test
+  - test
   - deploy
   # - validate
   # - notify
