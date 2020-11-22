@@ -25,7 +25,8 @@ class DNACTemplate(object):
         self.template_dir = os.path.join(os.path.dirname(__file__), '../dnac-templates')
         # login to DNAC
         self.dnac = api.DNACenterAPI(**self.config.dnac)
-        self.template_project_id = self.get_project_id()
+        # get project id, create if not there
+        self.template_project_id = self.get_project_id(self.config.template_project)
 
     def _read_config(self, config_file):
         if config_file is None:
@@ -40,14 +41,20 @@ class DNACTemplate(object):
                     attrs['dnac'][k] = os.environ.get(m.group(1))
         self.config = AttrDict(attrs)
 
-    def get_project_id(self):
+    def get_project_id(self, project):
         '''
-        Retrieve the project ID as we need it in various places
+        Retrieve the project ID as we need it in various places. If
+        Project doesn't exist, create it
         '''
         for p in self.dnac.configuration_templates.get_projects():
-            if p.name == self.config.template_project:
+            if p.name == project:
                 return p.id
-        raise Exception('template_project not found on DNAC')
+
+        task = self.dnac.configuration_templates.create_project(name=project)
+        project_id = self.wait_and_check_status(task)
+        if not project_id:
+            raise Exception('Creation of project "{}" failed'.format(project))
+        return project_id
 
     def retrieve_provisioned_templates(self):
         '''
