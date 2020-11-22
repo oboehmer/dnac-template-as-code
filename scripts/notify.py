@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import json
 import os
 import sys
 
@@ -33,10 +34,20 @@ class Notify(object):
         # login to Webex
         self.api = WebexTeamsAPI(access_token=token)
 
-    def notify(self, message, roomid=None, persons=[]):
+    def notify(self, message, roomid=None, persons=[], result_json=None):
         '''
         send notification to rooms and/or persons identified in the config file
         '''
+
+        if result_json:
+            try:
+                with open(result_json) as fd:
+                    results = json.load(fd)
+                message += '\n'
+                for k, v in results.items():
+                    message += '- {}: {}\n'.format(k, v)
+            except Exception:
+                pass
 
         if roomid is None:
             if hasattr(self.config.notify, 'room_id'):
@@ -51,20 +62,21 @@ class Notify(object):
                     persons = [p]
                 else:
                     persons = p
-
+    
         if roomid:
-            self.api.messages.create(markdown=message, roomId=roomid)
+            self.api.messages.create(markdown=message, text=message, roomId=roomid)
         for p in persons:
             if '@' in p:
-                self.api.messages.create(markdown=message, toPersonEmail=p)
+                self.api.messages.create(markdown=message, text=message, toPersonEmail=p)
             else:
-                self.api.messages.create(markdown=message, toPersonId=p)
+                self.api.messages.create(markdown=message, text=message, toPersonId=p)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Notify')
     parser.add_argument('--room', help='WebexTeams room id to send to')
     parser.add_argument('--person', help='person ID or email (multiple values can be specified, comma-separated')
     parser.add_argument('--config', help='config file to use')
+    parser.add_argument('--results', help='load results from json file (default: no result)')
     parser.add_argument('message', nargs=argparse.REMAINDER, help='message to be sent')
     args = parser.parse_args()
 
@@ -77,4 +89,4 @@ if __name__ == '__main__':
         sys.exit(1)
 
     notif = Notify(config_file=args.config)
-    notif.notify(' '.join(args.message), roomid=args.room, persons=persons)
+    notif.notify(' '.join(args.message), roomid=args.room, persons=persons, result_json=args.results)

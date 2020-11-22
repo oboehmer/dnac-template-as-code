@@ -17,9 +17,12 @@ commit_prod:
   stage: deploy
   # only:
   #   - master
+  artifacts:
+    paths:
+      - results.json
   script:
     - export DNAC_PASSWORD=123
-    - python scripts/dnac_templ.py --debug
+    - python scripts/dnac_templ.py --results results.json --debug
 
 # test:
 #   image: ${DOCKER_REPO}/${RUNNER_IMAGE}
@@ -35,7 +38,8 @@ notify_success:
  script:
    # assumes teams token is provided in environment variable
    # WEBEX_API_NOTIFICATION_TOKEN
-   - python scripts/notify.py "✅ Pipeline completed successfully ($CI_JOB_URL)"
+   - ls -l 
+   - python scripts/notify.py  --results results.json "✅ Pipeline completed successfully ($CI_JOB_URL)"
 
 notify_failure:
  image: ${RUNNER_IMAGE}
@@ -44,4 +48,5 @@ notify_failure:
  script:
    # assumes teams token is provided in environment variable
    # WEBEX_API_NOTIFICATION_TOKEN
-   - python scripts/notify.py "❌ Pipeline failed ($CI_JOB_URL)"
+   - ls -l
+   - python scripts/notify.py  --results results.json "❌ Pipeline failed ($CI_JOB_URL)"

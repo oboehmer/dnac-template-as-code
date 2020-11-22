@@ -16,7 +16,7 @@ template_project: CICD-CLEUR21
 
 notify:
   # can specify room_id and/or WebexTeams person email
-  room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
+  # room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
   persons:
     - oboehmer@cisco.com
 
