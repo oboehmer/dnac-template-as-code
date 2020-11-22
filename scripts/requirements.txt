@@ -1,4 +1,7 @@
-dnacentersdk==2.0.2
+# dnacentersdk doesn't expose language parameter for create/update_template
+# using fork which adds this
+#dnacentersdk==2.0.2
+git+https://github.com/oboehmer/dnacentersdk.git@language-2.1.2
 webexteamssdk==1.6
 attrdict==2.0.1
 Jinja2==2.11.2

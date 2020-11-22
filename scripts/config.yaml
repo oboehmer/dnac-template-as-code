@@ -8,7 +8,7 @@ dnac:
   base_url: https://10.49.232.103
   version: 2.1.2
   username: cleur21 
-  password: Cisco123!
+  password: '%ENV(DNAC_PASSWORD)'
   verify: False
 
 # DNAC project we maintain
