@@ -1,0 +1,39 @@
+
+stages:
+  # - test
+  - deploy
+  # - validate
+  # - notify
+
+validate:
+  image: python:3
+  stage: test
+  script:
+    - echo TODO
+
+commit_prod:
+  image: python:3
+  stage: deploy
+  # only:
+  #   - master
+  script:
+    - pip install -r scripts/requirements.txt
+    - python scripts/dnac_templ.py --debug
+
+# test:
+#   image: ${DOCKER_REPO}/${RUNNER_IMAGE}
+#   stage: test
+#   script:
+#     - echo 'test to be done'
+
+# last step in the pipeline to report status
+# using CI_JOB_STATUS requires a more modern gitlab runner as in my lab
+# using webhook instead
+#notify:
+#  image: ${DOCKER_REPO}/${RUNNER_IMAGE}
+#  stage: .post
+#  script:
+#    - pip install webexteamssdk
+#    # assumes teams token is provided in environment variable
+#    # WEBEX_API_NOTIFICATION_TOKEN
+#    - python scripts/notify.py "Pipeline result $CI_JOB_STATUS ($CI_JOB_URL)"

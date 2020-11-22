@@ -1,0 +1,22 @@
+# config file for CICD provisioning script
+
+# dnac structure elements can reference
+# environmnet variables, i.e.
+#   password: '%ENV(DNAC_PASSWORD)'
+#
+dnac:
+  base_url: https://10.49.232.103
+  version: 2.1.2
+  username: oboehmer
+  password: '%ENV(DNAC_PASSWORD)'
+  verify: False
+
+# DNAC project we maintain
+template_project: CICD-CLEUR21
+
+notify:
+  # can specify room_id and/or WebexTeams person email
+  #room_id:
+  persons:
+    - oboehmer@cisco.com
+
