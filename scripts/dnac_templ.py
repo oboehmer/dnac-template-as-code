@@ -142,7 +142,13 @@ class DNACTemplate(object):
         pushed_templates = []
 
         # process all the templates found in the repo
-        for template_file in os.listdir(self.template_dir):
+        # assume no files if directory doesn't exist
+        if os.path.isdir(self.template_dir):
+            all_files = os.listdir(self.template_dir)
+        else:
+            all_files = []
+
+        for template_file in all_files:
             logger.debug('processing file "{}"'.format(template_file))
 
             with open(os.path.join(self.template_dir, template_file), 'r') as fd:

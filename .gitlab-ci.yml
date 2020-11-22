@@ -37,11 +37,11 @@ notify_success:
  stage: notify
  when: on_success
  script:
-   - python scripts/notify.py  --results results.json "✅ Pipeline on branch $CI_BUILD_REF_NAME completed successfully ($CI_JOB_URL)"
+   - python scripts/notify.py  --results results.json "✅ Pipeline on branch $CI_BUILD_REF_NAME completed successfully ($CI_PIPELINE_URL)"
 
 notify_failure:
  image: ${RUNNER_IMAGE}
  stage: notify
  when: on_failure
  script:
-   - python scripts/notify.py  --results results.json "❌ Pipeline on branch $CI_BUILD_REF_NAME failed ($CI_JOB_URL)"
+   - python scripts/notify.py  --results results.json "❌ Pipeline on branch $CI_BUILD_REF_NAME failed ($CI_PIPELINE_URL)"
