@@ -10,7 +10,6 @@ validate:
   image: ${RUNNER_IMAGE}
   stage: test
   script:
-    - env
     - echo TODO
 
 commit_prod:
@@ -19,7 +18,7 @@ commit_prod:
   # only:
   #   - master
   script:
-    - env
+    - export DNAC_PASSWORD=123
     - python scripts/dnac_templ.py --debug
 
 # test:
