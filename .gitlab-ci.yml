@@ -21,7 +21,6 @@ commit_prod:
     paths:
       - results.json
   script:
-    - export DNAC_PASSWORD=123
     - python scripts/dnac_templ.py --results results.json --debug
 
 # test:
