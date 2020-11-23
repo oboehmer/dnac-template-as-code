@@ -19,24 +19,12 @@ validate:
 commit_prod:
   image: ${RUNNER_IMAGE}
   stage: deploy
-  only:
-    - master
   artifacts:
     paths:
       - results.json
   script:
-    - python scripts/dnac_templ.py --results results.json --debug
-
-commit_preprod:
-  image: ${RUNNER_IMAGE}
-  stage: deploy
-  only:
-    - branches
-  artifacts:
-    paths:
-      - results.json
-  script:
-    - python scripts/dnac_templ.py --config scripts/config-preprod.yaml --results results.json --debug
+    - if [ "$CI_COMMIT_BRANCH" == "master ] ; then ARG="" ; else ARG="--config scripts/config-preprod.yaml"
+    - python scripts/dnac_templ.py $ARG --results results.json --debug
 
 # test:
 #   image: ${DOCKER_REPO}/${RUNNER_IMAGE}
