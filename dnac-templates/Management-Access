@@ -1,0 +1,12 @@
+no ip access-list standard SNMP
+ip access-list standard SNMP
+ 10 permit 192.168.1.1
+ 20 deny   192.168.2.4
+ 30 permit 192.168.2.0 0.0.0.255
+ 999 deny any log
+!
+no ip access-list standard SSH
+ip access-list standard SSH
+ 10 permit 192.168.2.0 0.0.0.255
+ 20 permit 192.168.16.0 0.0.7.255
+ 999 deny any

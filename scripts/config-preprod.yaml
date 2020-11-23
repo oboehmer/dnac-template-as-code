@@ -1,0 +1,21 @@
+# config file for CICD provisioning script
+
+# dnac structure elements can reference
+# environmnet variables, i.e.
+#   password: '%ENV(DNAC_PASSWORD)'
+#
+dnac:
+  base_url: https://10.49.232.103
+  version: 2.1.2
+  username: cleur21 
+  password: '%ENV(DNAC_PASSWORD)'
+  verify: False
+
+# DNAC project we maintain
+template_project: CICD-CLEUR21-test
+
+notify:
+  # specify room_id and/or WebexTeams person email
+  # room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
+  persons:
+    - '%ENV(GITLAB_USER_EMAIL)'

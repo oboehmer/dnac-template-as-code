@@ -7,6 +7,7 @@ import sys
 import yaml
 from attrdict import AttrDict
 from webexteamssdk import WebexTeamsAPI
+from utils import read_config
 
 
 class Notify(object):
@@ -18,8 +19,7 @@ class Notify(object):
         # read config files
         if config_file is None:
             config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
-        with open(config_file) as fd:
-            self.config = AttrDict(yaml.safe_load(fd.read()))
+        self.config = read_config(config_file)
 
         if not hasattr(self.config, 'notify'):
             raise ValueError('missing notify config section')
@@ -49,13 +49,11 @@ class Notify(object):
             except Exception:
                 pass
 
-        if roomid is None:
+        args_given = roomid or len(persons) > 0
+        if not args_given:
             if hasattr(self.config.notify, 'room_id'):
                 roomid = self.config.notify.room_id
-            else:
-                roomid = None
 
-        if not len(persons):
             if hasattr(self.config.notify, 'persons'):
                 p = self.config.notify.persons
                 if isinstance(p, str):
@@ -70,6 +68,7 @@ class Notify(object):
                 self.api.messages.create(markdown=message, text=message, toPersonEmail=p)
             else:
                 self.api.messages.create(markdown=message, text=message, toPersonId=p)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Notify')
