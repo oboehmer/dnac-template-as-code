@@ -1,13 +1,16 @@
 #!/usr/bin/env python
-from datetime import datetime
 import json
 import logging
 import os
 import re
 import time
+from datetime import datetime
+from attrdict import AttrDict
 
-from dnacentersdk import api
 import urllib3
+import yaml
+from dnacentersdk import api
+
 from utils import read_config
 
 urllib3.disable_warnings()
@@ -246,4 +249,61 @@ class DNACTemplate(object):
                 fd.write(json.dumps(results, indent=2) + '\n')
         return errors == 0
 
-    # def deploy_templates(self, purge=True, result_json=None):
+    def deploy_templates(self, deploy_dir, template_dir):
+        '''
+        deploy the templates in template_dir based on yaml files
+        in deploy_dir.
+        '''
+        for f in os.listdir(deploy_dir):
+
+            if f.startswith('.'):
+                continue
+
+            with open(os.path.join(deploy_dir, f)) as fd:
+                dep_info = AttrDict(yaml.safe_load(fd.read()))
+
+            try:
+                template_name = dep_info.template_name
+            except AttributeError:
+                template_name = os.path.splitext(f)[0]
+
+            if hasattr(dep_info, 'vars') and isinstance(dep_info['vars'], dict):
+                global_vars = dep_info['vars']
+            else:
+                global_vars = {}
+
+            # iterate through devices configured
+            for device, items in dep_info.devices.items():
+
+                # update the variable assignment per device
+                params = global_vars.copy()
+                try:
+                    params.update(items['vars'])
+                except (TypeError, KeyError):
+                    pass
+                
+                print(device, params)
+
+                # TODO: 
+                # - fetch template id from template_name
+                # - assemble targetinfo, best using device name, not 
+                #     targetInfo = [{'id': deviceIp, 'type': "MANAGED_DEVICE_IP", "params": params}]
+                #
+                # found below code in Oren's repo.. 
+                #
+                # def DeployTemplate(templateId, deviceIp, params):
+                #     targetInfo = [{'id': deviceIp, 'type': "MANAGED_DEVICE_IP", "params": params}]
+                #     deploymentId = dnac.configuration_templates.deploy_template(forcePushTemplate=True,
+                #         isComposite=False, templateId=templateId, targetInfo=targetInfo)
+                #     time.sleep(2)
+                #     id = deploymentId["deploymentId"].split()
+                #     return (id[7])
+
+                # def IsDeploymentSuccessful(deploymentId):
+                #     time.sleep(5)
+                #     results = dnac.configuration_templates.get_template_deployment_status(deployment_id=deploymentId)
+                #     if results['status'] == "SUCCESS":
+                #         return(True)
+                #     else:
+                #         return(False)
+

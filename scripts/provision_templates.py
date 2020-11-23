@@ -18,6 +18,6 @@ if args.debug:
 else:
     logging.basicConfig(level=logging.INFO)
 
-service = DNACTemplate(config_file=args.config, project=args.project)
-result = service.provision_templates(args.template_dir, purge=not args.nopurge, result_json=args.results)
+dnac = DNACTemplate(config_file=args.config, project=args.project)
+result = dnac.provision_templates(args.template_dir, purge=not args.nopurge, result_json=args.results)
 sys.exit(0 if result else 1)
