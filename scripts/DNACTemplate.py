@@ -270,18 +270,18 @@ class DNACTemplate(object):
             logger.debug('Using template name {}'.format(template_name))
 
             # set up global vars for this deployment
-            if hasattr(dep_info, 'vars') and isinstance(dep_info['vars'], dict):
-                global_vars = dep_info['vars']
+            if hasattr(dep_info, 'params') and isinstance(dep_info['params'], dict):
+                global_params = dep_info['params']
             else:
-                global_vars = {}
+                global_params = {}
 
             # iterate through devices configured
             for device, items in dep_info.devices.items():
 
                 # update the variable assignment per device
-                params = global_vars.copy()
+                params = global_params.copy()
                 try:
-                    params.update(items['vars'])
+                    params.update(items['params'])
                 except (TypeError, KeyError):
                     pass
                 
