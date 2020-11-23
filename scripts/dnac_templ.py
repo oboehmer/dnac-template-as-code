@@ -10,8 +10,7 @@ import time
 
 from dnacentersdk import api
 import urllib3
-from attrdict import AttrDict
-import yaml
+from utils import read_config
 
 urllib3.disable_warnings()
 logger = logging.getLogger(os.path.basename(__file__))
@@ -19,42 +18,37 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 class DNACTemplate(object):
 
-    def __init__(self, config_file=None):
+    def __init__(self, config_file=None, project=None):
 
-        self._read_config(config_file)
+        if config_file is None:
+            config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
+        self.config = read_config(config_file)
+        logger.debug('Config read: {}'.format(self.config))
         self.template_dir = os.path.join(os.path.dirname(__file__), '../dnac-templates')
         # login to DNAC
         self.dnac = api.DNACenterAPI(**self.config.dnac)
         # get project id, create if not there
-        self.template_project_id = self.get_project_id(self.config.template_project)
-
-    def _read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
-        with open(config_file) as fd:
-            attrs = yaml.safe_load(fd.read())
-
-        for k, v in attrs['dnac'].items():
-            if isinstance(v, str):
-                m = re.match(r'%ENV\(([^)]+)\)$', v)
-                if m:
-                    attrs['dnac'][k] = os.environ.get(m.group(1))
-        self.config = AttrDict(attrs)
+        self.template_project_id = self.get_project_id(project or self.config.template_project)
 
     def get_project_id(self, project):
         '''
         Retrieve the project ID as we need it in various places. If
         Project doesn't exist, create it
         '''
+        if not project:
+            raise ValueError('DNAC project name not provided in config.yaml')
+
         for p in self.dnac.configuration_templates.get_projects():
             if p.name == project:
                 return p.id
 
         task = self.dnac.configuration_templates.create_project(name=project)
         project_id = self.wait_and_check_status(task)
-        if not project_id:
+        if project_id:
+            logger.info('Created project "{}"'.format(project))
+            return project_id
+        else:
             raise Exception('Creation of project "{}" failed'.format(project))
-        return project_id
 
     def retrieve_provisioned_templates(self):
         '''
@@ -68,18 +62,22 @@ class DNACTemplate(object):
             # store both template and template details, joining both in the same dict
             result[t.name] = t
             result[t.name].update(self.dnac.configuration_templates.get_template_details(t.templateId))
-            logger.debug('Retrieved template {}, full info: {}'.format(t.templateId, result[t.name]))
+            # logger.debug('Retrieved template {}, full info: {}'.format(t.templateId, result[t.name]))
         return result
 
-    def get_template_params(self, content):
+    def get_template_params(self, content, language):
         '''
         extracts referenced jinja2 variables and returns params list.
-        TODO: This is not robust, we assume all variables found are strings
+        TODO: This is not robust, we assume all variables found are strings,
+              we don't look for vars in Jinja control statements or loops
         '''
-        from jinja2 import Environment, PackageLoader, meta
-        env = Environment(loader=PackageLoader('gummi', 'templates'))
-        parsed_content = env.parse(content)
-        variables = meta.find_undeclared_variables(parsed_content)
+        if language == 'JINJA':
+            from jinja2 import Environment, PackageLoader, meta
+            env = Environment(loader=PackageLoader('gummi', 'templates'))
+            parsed_content = env.parse(content)
+            variables = meta.find_undeclared_variables(parsed_content)
+        else:
+            variables = re.findall(r'\${*([a-z][a-z0-9_]+)}*', content, re.I)
         params = []
         order = 1
         for v in variables:
@@ -114,6 +112,22 @@ class DNACTemplate(object):
             raise Exception()
         return result
 
+    def get_template_langauge(self, content):
+        '''
+        simple heuristic to determine if we deal with a jinja or velocity (default)
+        template
+        '''
+        is_jinja = ('{{' in content and '}}' in content) or \
+                   ('{%' in content and '%}' in content)
+        is_velocity = (re.search(r'\$[A-Z]+', content) is not None)
+
+        if is_jinja and is_velocity:
+            return 'VELOCITY'
+        elif is_jinja:
+            return 'JINJA'
+        else:
+            return 'VELOCITY'
+
     def provision_templates(self, purge=True, result_json=None):
         '''
         Push all templates found in our git repo to DNAC
@@ -134,8 +148,8 @@ class DNACTemplate(object):
         provisioned_templates = self.retrieve_provisioned_templates()
         if len(provisioned_templates) > 0:
             logger.debug('provisioned templates: {}'.format(', '.join(provisioned_templates.keys())))
-            for t in provisioned_templates.values():
-                logger.debug(t)
+            # for t in provisioned_templates.values():
+            #     logger.debug(t)
         else:
             logger.debug('no templates provisioned.')
 
@@ -144,7 +158,7 @@ class DNACTemplate(object):
         # process all the templates found in the repo
         # assume no files if directory doesn't exist
         if os.path.isdir(self.template_dir):
-            all_files = os.listdir(self.template_dir)
+            all_files = [f for f in os.listdir(self.template_dir) if not f.startswith('.')]
         else:
             all_files = []
 
@@ -156,6 +170,8 @@ class DNACTemplate(object):
 
             template_name = template_file
 
+            language = self.get_template_langauge(template_content)
+
             current_template = provisioned_templates.get(template_name)
             if not current_template:
                 # new template
@@ -164,13 +180,13 @@ class DNACTemplate(object):
                     'name': template_name,
                     'description': '',
                     'containingTemplates': [],
-                    'language': 'JINJA',
+                    'language': language,
                     'composite': False,
                     'deviceTypes': [{'productFamily': 'Switches and Hubs'}],
                     'softwareType': "IOS-XE",
                     'softwareVersion': None,
                     'tags': [],
-                    'templateParams': self.get_template_params(template_content),
+                    'templateParams': self.get_template_params(template_content, language),
                     'templateContent': template_content
                 }
                 # create the template
@@ -192,11 +208,11 @@ class DNACTemplate(object):
                     'id': current_template.id,
                     'projectId': self.template_project_id,
                     'name': template_name,
-                    'language': current_template.language,
+                    'language': language,
                     'composite': current_template.composite,
                     'softwareType': current_template.softwareType,
                     'deviceTypes': current_template.deviceTypes,
-                    'templateParams': self.get_template_params(template_content),
+                    'templateParams': self.get_template_params(template_content, language),
                     'templateContent': template_content
                 }
                 logger.debug(params)
@@ -238,6 +254,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Provision DNAC templates')
     parser.add_argument('--debug', action='store_true', help='print more debugging output')
     parser.add_argument('--config', help='config file to use')
+    parser.add_argument('--project', help='DNAC template project (default: taken from config)')
     parser.add_argument('--results', help='save results in json in this file (default: no file is created)')
     parser.add_argument('--nopurge', action="store_true", help='Don\'t delete templates found on DNAC which are not in the repo')
     args = parser.parse_args()
@@ -247,6 +264,6 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(level=logging.INFO)
 
-    service = DNACTemplate(config_file=args.config)
+    service = DNACTemplate(config_file=args.config, project=args.project)
     result = service.provision_templates(purge=not args.nopurge, result_json=args.results)
     sys.exit(0 if result else 1)

@@ -1,0 +1,36 @@
+mdns-sd service-list SDG-SERVICES-OUT OUT
+ match airplay
+!
+mdns-sd service-policy DNAC-BONJOUR-POLICY
+match service-policy SDG-SERVICES-OUT
+!
+service-export mdns-sd controller WIDE-AREA-BONJOUR
+ controller-address $DNAC_ADDR
+ controller-port 9991
+ controller-source-interface Loopback 0
+ controller-service-policy DNAC-BONJOUR-POLICY
+!
+
+Local Area Template
+!
+mdns-sd gateway
+!
+mdns-sd service-list SDG-SERVICES-IN IN
+ match airplay
+!
+mdns-sd service-list SDG-SERVICES-OUT OUT
+ match airplay
+!
+mdns-sd service-policy SDG-SERVICES
+ match service-policy SDG-SERVICES-IN
+ match service-policy SDG-SERVICES-OUT
+!
+
+!
+interface Vlan $VLAN_ID_CORP1
+ mdns-sd gateway
+   mdns-sd service-policy SDG-SERVICES
+!
+interface Vlan $VLAN_ID_CORP2
+ mdns-sd gateway
+   mdns-sd service-policy SDG-SERVICES

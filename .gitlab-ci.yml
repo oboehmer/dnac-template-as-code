@@ -12,16 +12,29 @@ validate:
   script:
     - echo TODO
 
+# commit stage, use different configs depending if we run in master
+# or in branches
 commit_prod:
   image: ${RUNNER_IMAGE}
   stage: deploy
-  # only:
-  #   - master
+  only:
+    - master
   artifacts:
     paths:
       - results.json
   script:
     - python scripts/dnac_templ.py --results results.json --debug
+
+commit_preprod:
+  image: ${RUNNER_IMAGE}
+  stage: deploy
+  only:
+    - branches
+  artifacts:
+    paths:
+      - results.json
+  script:
+    - python scripts/dnac_templ.py --config scripts/config-preprod.yaml --results results.json --debug
 
 # test:
 #   image: ${DOCKER_REPO}/${RUNNER_IMAGE}
@@ -30,18 +43,41 @@ commit_prod:
 #     - echo 'test to be done'
 
 # last step in the pipeline to report status
-  # assumes teams token is provided in environment variable
-  # WEBEX_API_NOTIFICATION_TOKEN
-notify_success:
- image: ${RUNNER_IMAGE}
- stage: notify
- when: on_success
- script:
-   - python scripts/notify.py  --results results.json "✅ Pipeline on branch $CI_BUILD_REF_NAME completed successfully ($CI_PIPELINE_URL)"
+# we need multiple steps here as we want/need to differentiate between success
+# and failures and between master and non-master branches
+notify_success_master:
+  image: ${RUNNER_IMAGE}
+  stage: notify
+  only:
+    - master
+  when: on_success
+  script:
+    - python scripts/notify.py  --results results.json "✅ Pipeline on branch $CI_BUILD_REF_NAME completed successfully ($CI_PIPELINE_URL)"
 
-notify_failure:
- image: ${RUNNER_IMAGE}
- stage: notify
- when: on_failure
- script:
-   - python scripts/notify.py  --results results.json "❌ Pipeline on branch $CI_BUILD_REF_NAME failed ($CI_PIPELINE_URL)"
+notify_failure_master:
+  image: ${RUNNER_IMAGE}
+  stage: notify
+  when: on_failure
+  only:
+    - master
+  script:
+    - python scripts/notify.py  --results results.json "❌ Pipeline on branch $CI_BUILD_REF_NAME failed ($CI_PIPELINE_URL)"
+
+# send branch pipeline results only to the developer
+notify_success_branches:
+  image: ${RUNNER_IMAGE}
+  stage: notify
+  only:
+    - branches
+  when: on_success
+  script:
+    - python scripts/notify.py --person $GITLAB_USER_EMAIL --results results.json "✅ Pipeline on branch $CI_BUILD_REF_NAME completed successfully ($CI_PIPELINE_URL)"
+
+notify_failure_branches:
+  image: ${RUNNER_IMAGE}
+  stage: notify
+  when: on_failure
+  only:
+    - branches
+  script:
+    - python scripts/notify.py --person $GITLAB_USER_EMAIL --results results.json "❌ Pipeline on branch $CI_BUILD_REF_NAME failed ($CI_PIPELINE_URL)"
