@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-import argparse
 from datetime import datetime
 import json
 import logging
 import os
 import re
-import sys
 import time
 
 from dnacentersdk import api
@@ -23,8 +21,6 @@ class DNACTemplate(object):
         if config_file is None:
             config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
         self.config = read_config(config_file)
-        # logger.debug('Config read: {}'.format(self.config))
-        self.template_dir = os.path.join(os.path.dirname(__file__), '../dnac-templates')
         # login to DNAC
         self.dnac = api.DNACenterAPI(**self.config.dnac)
         # get project id, create project if needed
@@ -132,7 +128,7 @@ class DNACTemplate(object):
         else:
             return 'VELOCITY'
 
-    def provision_templates(self, purge=True, result_json=None):
+    def provision_templates(self, template_dir, purge=True, result_json=None):
         '''
         Push all templates found in our git repo to DNAC
         TODL Templates which have previously provisioned but which have been removed
@@ -160,16 +156,13 @@ class DNACTemplate(object):
         pushed_templates = []
 
         # process all the templates found in the repo
-        # assume no files if directory doesn't exist
-        if os.path.isdir(self.template_dir):
-            all_files = [f for f in os.listdir(self.template_dir) if not f.startswith('.')]
-        else:
-            all_files = []
+        for template_file in os.listdir(template_dir):
+            if template_file.startswith('.'):
+                continue
 
-        for template_file in all_files:
             logger.debug('processing file "{}"'.format(template_file))
 
-            with open(os.path.join(self.template_dir, template_file), 'r') as fd:
+            with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
 
             template_name = template_file
@@ -253,21 +246,4 @@ class DNACTemplate(object):
                 fd.write(json.dumps(results, indent=2) + '\n')
         return errors == 0
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Provision DNAC templates')
-    parser.add_argument('--debug', action='store_true', help='print more debugging output')
-    parser.add_argument('--config', help='config file to use')
-    parser.add_argument('--project', help='DNAC template project (default: taken from config)')
-    parser.add_argument('--results', help='save results in json in this file (default: no file is created)')
-    parser.add_argument('--nopurge', action="store_true", help='Don\'t delete templates found on DNAC which are not in the repo')
-    args = parser.parse_args()
-
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-
-    service = DNACTemplate(config_file=args.config, project=args.project)
-    result = service.provision_templates(purge=not args.nopurge, result_json=args.results)
-    sys.exit(0 if result else 1)
+    # def deploy_templates(self, purge=True, result_json=None):
