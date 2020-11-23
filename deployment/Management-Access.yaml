@@ -2,14 +2,8 @@
 # basename of the file
 # template_name: Management-Access
 
-params:
-  var1: value1
-  var2: value2
-
 
 devices:
   berlab-c9300-1.berlab.de:
-    params:
-      var1: valuexx
 
   berlab-c9300-5.berlab.de:
