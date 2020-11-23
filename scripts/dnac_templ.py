@@ -97,6 +97,10 @@ class DNACTemplate(object):
         return params
 
     def wait_and_check_status(self, response, max_attempts=2, sleeptime=2):
+        '''
+        poll status of task (i.e. template creation or update), and return
+        response.data
+        '''
         attempt = 0
         result = None
         while attempt < max_attempts:

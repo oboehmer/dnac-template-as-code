@@ -4,5 +4,9 @@
 git+https://github.com/oboehmer/dnacentersdk.git@language-2.1.2
 webexteamssdk==1.6
 attrdict==2.0.1
-Jinja2==2.11.2
 PyYAML==5.3.1
+Jinja2==2.11.2
+pyats[full]==20.8
+# you might want to install gummi manually before starting this, it has some
+# strict reqs for request and six which are incompatible with other packages
+gummi==1.3.3

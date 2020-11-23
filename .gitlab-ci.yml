@@ -1,5 +1,7 @@
 # vars in gitlab-ci env:
-# RUNNER_IMAGE: dockerhub.cisco.com/as-dev-docker-local/cisco/cleur21_semops21:v1
+variables:
+  RUNNER_IMAGE: dockerhub.cisco.com/as-dev-docker-local/cisco/cleur21_semops21:v2
+
 stages:
   - test
   - deploy
