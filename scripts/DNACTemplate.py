@@ -249,7 +249,7 @@ class DNACTemplate(object):
                 fd.write(json.dumps(results, indent=2) + '\n')
         return errors == 0
 
-    def deploy_templates(self, deploy_dir, template_dir):
+    def deploy_templates(self, deploy_dir):
         '''
         deploy the templates in template_dir based on yaml files
         in deploy_dir.
@@ -259,6 +259,7 @@ class DNACTemplate(object):
             if f.startswith('.'):
                 continue
 
+            logger.info('processing {}'.format(f))
             with open(os.path.join(deploy_dir, f)) as fd:
                 dep_info = AttrDict(yaml.safe_load(fd.read()))
 
@@ -266,7 +267,9 @@ class DNACTemplate(object):
                 template_name = dep_info.template_name
             except AttributeError:
                 template_name = os.path.splitext(f)[0]
+            logger.debug('Using template name {}'.format(template_name))
 
+            # set up global vars for this deployment
             if hasattr(dep_info, 'vars') and isinstance(dep_info['vars'], dict):
                 global_vars = dep_info['vars']
             else:
@@ -282,7 +285,7 @@ class DNACTemplate(object):
                 except (TypeError, KeyError):
                     pass
                 
-                print(device, params)
+                print(template_name, device, params)
 
                 # TODO: 
                 # - fetch template id from template_name
