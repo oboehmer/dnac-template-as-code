@@ -19,15 +19,15 @@ logger = logging.getLogger(os.path.basename(__file__))
 class DNACTemplate(object):
 
     def __init__(self, config_file=None, project=None):
-
+        # read config file
         if config_file is None:
             config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
         self.config = read_config(config_file)
-        logger.debug('Config read: {}'.format(self.config))
+        # logger.debug('Config read: {}'.format(self.config))
         self.template_dir = os.path.join(os.path.dirname(__file__), '../dnac-templates')
         # login to DNAC
         self.dnac = api.DNACenterAPI(**self.config.dnac)
-        # get project id, create if not there
+        # get project id, create project if needed
         self.template_project_id = self.get_project_id(project or self.config.template_project)
 
     def get_project_id(self, project):
