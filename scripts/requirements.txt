@@ -9,4 +9,4 @@ Jinja2==2.11.2
 pyats[full]==20.8
 # you might want to install gummi manually before starting this, it has some
 # strict reqs for request and six which are incompatible with other packages
-gummi==1.3.3
+#gummi==1.3.3

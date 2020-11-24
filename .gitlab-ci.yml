@@ -3,6 +3,7 @@
 
 stages:
   - validate
+  - provision
   - deploy
   - test
   - notify
@@ -20,14 +21,26 @@ validate:
   script:
     - echo 'validation to be done'
 
-deploy_templates:
+provision_templates:
   image: ${RUNNER_IMAGE}
-  stage: deploy
+  stage: provision
   artifacts:
     paths:
       - results.json
   script:
-    - python scripts/dnac_templ.py $ARG_CONFIG --results results.json --debug
+    - python scripts/provision_templates.py $ARG_CONFIG --template_dir dnac-templates/ --results results.json --debug
+
+# when in master, also deploy
+deploy_templates:
+  image: ${RUNNER_IMAGE}
+  stage: deploy
+  only:
+    - master
+  artifacts:
+    paths:
+      - results_deploy.json
+  script:
+    - python scripts/deploy_templates.py $ARG_CONFIG --deploy_dir deployment/ --results results_deploy.json --debug
 
 test:
   image: ${RUNNER_IMAGE}
@@ -44,11 +57,11 @@ notify_success:
   stage: notify
   when: on_success
   script:
-    - python scripts/notify.py $ARG_CONFIG --results results.json "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
+    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
 
 notify_failure:
   image: ${RUNNER_IMAGE}
   stage: notify
   when: on_failure
   script:
-    - python scripts/notify.py $ARG_CONFIG --results results.json "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"

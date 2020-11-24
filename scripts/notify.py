@@ -4,8 +4,6 @@ import json
 import os
 import sys
 
-import yaml
-from attrdict import AttrDict
 from webexteamssdk import WebexTeamsAPI
 from utils import read_config
 
@@ -40,14 +38,16 @@ class Notify(object):
         '''
 
         if result_json:
-            try:
-                with open(result_json) as fd:
-                    results = json.load(fd)
-                message += '\n'
-                for k, v in results.items():
-                    message += '- {}: {}\n'.format(k, v)
-            except Exception:
-                pass
+            for f in result_json:
+                try:
+                    with open(f) as fd:
+                        results = json.load(fd)
+                    message += '\n'
+                    for k, v in results.items():
+                        message += '- {}: {}\n'.format(k, v)
+                except Exception as e:
+                    print('Exception ignored while processing results: {}'.format(str(e)))
+                    pass
 
         args_given = roomid or len(persons) > 0
         if not args_given:
@@ -60,7 +60,7 @@ class Notify(object):
                     persons = [p]
                 else:
                     persons = p
-    
+
         if roomid:
             self.api.messages.create(markdown=message, text=message, roomId=roomid)
         for p in persons:
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     parser.add_argument('--room', help='WebexTeams room id to send to')
     parser.add_argument('--person', help='person ID or email (multiple values can be specified, comma-separated')
     parser.add_argument('--config', help='config file to use')
-    parser.add_argument('--results', help='load results from json file (default: no result)')
+    parser.add_argument('--results', action='append', help='load results from json file(s), use multiple times for multiple files (default: no result)')
     parser.add_argument('message', nargs=argparse.REMAINDER, help='message to be sent')
     args = parser.parse_args()
 

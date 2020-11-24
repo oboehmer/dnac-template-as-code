@@ -1,0 +1,8 @@
+# template name can be specified here, defaults to
+# basename of the file
+# template_name: Management-Access
+
+
+devices:
+  berlab-c9300-3:
+  berlab-c9300-9.berlab.de:
