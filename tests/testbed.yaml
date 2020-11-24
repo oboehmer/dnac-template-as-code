@@ -1,0 +1,43 @@
+# pyATS testbed file for post-deployment testing
+#
+# we leave the dynamic creation of this file from DNAC
+# inventory as an exercise to the reader
+
+devices:
+  berlab-c9300-3:
+    type: router
+    os: ios
+    custom:
+      abstraction:
+        order: [os]
+      categories:
+      - ios
+    credentials:
+      default:
+        username: cisco
+        password: cisco
+    connections:
+      defaults:
+        class: unicon.Unicon
+      cli:
+        protocol: ssh
+        ip: 10.49.232.52
+
+  berlab-c9300-9:
+    type: router
+    os: ios
+    custom:
+      abstraction:
+        order: [os]
+      categories:
+      - ios
+    credentials:
+      default:
+        username: cisco
+        password: cisco
+    connections:
+      defaults:
+        class: unicon.Unicon
+      cli:
+        protocol: ssh
+        ip: 10.49.232.51
