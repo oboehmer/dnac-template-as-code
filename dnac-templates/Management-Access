@@ -9,5 +9,4 @@ no ip access-list standard SSH
 ip access-list standard SSH
  10 permit 192.168.2.0 0.0.0.255
  20 permit 192.168.16.0 0.0.7.255
- 30 permit 10.0.0.0 0.0.0.255
  999 deny any
