@@ -19,7 +19,7 @@ validate:
   image: ${RUNNER_IMAGE}
   stage: validate
   script:
-    - echo 'validation to be done'
+    - python scripts/validate.py
 
 provision_templates:
   image: ${RUNNER_IMAGE}
