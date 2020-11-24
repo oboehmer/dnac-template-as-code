@@ -12,8 +12,8 @@ There are several template values (like device type, software family) which are 
 ## Overview
 We are maintaing two types of data in the Git repository:
 
-- DNAC configuration templates (Jinja2 or Velocity) within a dedicated Template Programmer Project in <dnac-templates/>
-- Deployment information for some or all of the templates in <deployment/>, where each template's deployment is controlled through a yaml file which specifies the devices the template should be applied to and which parameters should be used
+- DNAC configuration templates (Jinja2 or Velocity) within a dedicated Template Programmer Project in [dnac-templates/](dnac-templates/)
+- Deployment information for some or all of the templates in [deployment/](deployment/), where each template's deployment is controlled through a yaml file which specifies the devices the template should be applied to and which parameters should be used
 
 Any changes to the aforementioned data will trigger a (re-)deployment of the templates into the project, and, when run in "master" branch, also a (re-)deployment on the devices configured.
 
