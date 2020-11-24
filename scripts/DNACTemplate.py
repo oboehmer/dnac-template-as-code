@@ -78,33 +78,37 @@ class DNACTemplate(object):
     def get_template_params(self, content, language):
         '''
         extracts referenced jinja2 variables and returns params list.
-        TODO: This is not robust, we assume all variables found are strings,
-              we don't look for vars in Jinja control statements or loops
         '''
-        if language == 'JINJA':
-            from jinja2 import Environment, PackageLoader, meta
-            env = Environment(loader=PackageLoader('gummi', 'templates'))
-            parsed_content = env.parse(content)
-            variables = meta.find_undeclared_variables(parsed_content)
-        else:
-            variables = re.findall(r'\${*([a-z][a-z0-9_]+)}*', content, re.I)
-        params = []
-        order = 1
-        for v in variables:
-            params.append({
-                'parameterName': v,
-                'dataType': 'STRING',
-                'required': True,
-                'order': order,
-                'customOrder': 0})
-            order += 1
-            # d ={'parameterName': 'password', 'dataType': 'STRING', 'defaultValue': None,
-            # 'description': None, 'required': True, 'notParam': False, 'paramArray': False,
-            # 'displayName': None, 'instructionText': None, 'group': None, 'order': 2,
-            # 'customOrder': 0, 'selection': None, 'range': [], 'key': None, 'provider':
-            # None, 'binding': '', 'id': '869b0b95-8831-4e9e-9480-5268755bb270'
+        # TODO: This is not robust, we assume all variables found are strings,
+        # we don't look for vars in Jinja control statements or loops
+        # as we don't seem to need this stored in the templates, just return
+        # []
 
-        return params
+        return []
+        # if language == 'JINJA':
+        #     from jinja2 import Environment, PackageLoader, meta
+        #     env = Environment(loader=PackageLoader('gummi', 'templates'))
+        #     parsed_content = env.parse(content)
+        #     variables = meta.find_undeclared_variables(parsed_content)
+        # else:
+        #     variables = re.findall(r'\${*([a-z][a-z0-9_]+)}*', content, re.I)
+        # params = []
+        # order = 1
+        # for v in variables:
+        #     params.append({
+        #         'parameterName': v,
+        #         'dataType': 'STRING',
+        #         'required': True,
+        #         'order': order,
+        #         'customOrder': 0})
+        #     order += 1
+        #     # d ={'parameterName': 'password', 'dataType': 'STRING', 'defaultValue': None,
+        #     # 'description': None, 'required': True, 'notParam': False, 'paramArray': False,
+        #     # 'displayName': None, 'instructionText': None, 'group': None, 'order': 2,
+        #     # 'customOrder': 0, 'selection': None, 'range': [], 'key': None, 'provider':
+        #     # None, 'binding': '', 'id': '869b0b95-8831-4e9e-9480-5268755bb270'
+
+        # return params
 
     def wait_and_check_status(self, response, max_attempts=2, sleeptime=2):
         '''
@@ -193,7 +197,7 @@ class DNACTemplate(object):
                     'containingTemplates': [],
                     'language': language,
                     'composite': False,
-                    'deviceTypes': [{'productFamily': 'Switches and Hubs'}],
+                    'deviceTypes': [{'productFamily': 'Routers'}, {'productFamily': 'Switches and Hubs'}],
                     'softwareType': "IOS-XE",
                     'softwareVersion': None,
                     'tags': [],
@@ -223,7 +227,8 @@ class DNACTemplate(object):
                     'composite': current_template.composite,
                     'softwareType': current_template.softwareType,
                     'deviceTypes': current_template.deviceTypes,
-                    'templateParams': self.get_template_params(template_content, language),
+                    # 'templateParams': self.get_template_params(template_content, language),
+                    'templateParams': current_template.templateParams,
                     'templateContent': template_content
                 }
                 logger.debug(params)
