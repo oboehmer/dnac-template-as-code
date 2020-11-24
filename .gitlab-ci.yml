@@ -3,6 +3,7 @@
 
 stages:
   - validate
+  - provision
   - deploy
   - test
   - notify
@@ -20,9 +21,9 @@ validate:
   script:
     - echo 'validation to be done'
 
-update_templates:
+provision_templates:
   image: ${RUNNER_IMAGE}
-  stage: deploy
+  stage: provision
   artifacts:
     paths:
       - results.json
@@ -35,7 +36,6 @@ deploy_templates:
   stage: deploy
   only:
     - master
-    - deploy      # for testing
   artifacts:
     paths:
       - results_deploy.json
