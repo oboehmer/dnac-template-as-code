@@ -27,7 +27,8 @@ class DNACTemplate(object):
         # login to DNAC
         self.dnac = api.DNACenterAPI(**self.config.dnac)
         # get project id, create project if needed
-        self.template_project_id = self.get_project_id(project or self.config.template_project)
+        self.template_project = project or self.config.template_project
+        self.template_project_id = self.get_project_id(self.template_project)
 
     def get_project_id(self, project):
         '''
@@ -49,7 +50,7 @@ class DNACTemplate(object):
         else:
             raise Exception('Creation of project "{}" failed'.format(project))
 
-    def retrieve_provisioned_templates(self):
+    def retrieve_provisioned_templates(self, template_name=None):
         '''
         retrieve a list of templates currently provisioned.
         Returns a dict of template detail dicts, indexed by name
@@ -63,6 +64,16 @@ class DNACTemplate(object):
             result[t.name].update(self.dnac.configuration_templates.get_template_details(t.templateId))
             # logger.debug('Retrieved template {}, full info: {}'.format(t.templateId, result[t.name]))
         return result
+
+    def retrieve_template_id_by_name(self, template_name):
+        '''
+        Retrieves template by name in selected project
+        '''
+        for t in self.dnac.configuration_templates.gets_the_templates_available(
+                project_id=self.template_project_id):
+            if t.name == template_name:
+                return t.templateId
+        return None
 
     def get_template_params(self, content, language):
         '''
@@ -249,25 +260,42 @@ class DNACTemplate(object):
                 fd.write(json.dumps(results, indent=2) + '\n')
         return errors == 0
 
-    def deploy_templates(self, deploy_dir):
+    def deploy_templates(self, dir_or_file, result_json=None):
         '''
         deploy the templates in template_dir based on yaml files
-        in deploy_dir.
+        in dir_or_file (or use a single file)
         '''
-        for f in os.listdir(deploy_dir):
 
-            if f.startswith('.'):
-                continue
+        deployment_results = {
+            'message': 'DNAC template deployment run from {} UTC'.format(datetime.utcnow()),
+            'templates_processed': 0,
+            'devices_configured': 0,
+            'deployment_failures': 0,
+        }
+
+        if os.path.isdir(dir_or_file):
+            files = [os.path.join(dir_or_file, f)
+                     for f in os.listdir(dir_or_file)
+                     if not f.startswith('.')]
+        else:
+            files = [dir_or_file]
+
+        for f in files:
 
             logger.info('processing {}'.format(f))
-            with open(os.path.join(deploy_dir, f)) as fd:
+            with open(f) as fd:
                 dep_info = AttrDict(yaml.safe_load(fd.read()))
 
             try:
                 template_name = dep_info.template_name
             except AttributeError:
-                template_name = os.path.splitext(f)[0]
-            logger.debug('Using template name {}'.format(template_name))
+                template_name = os.path.splitext(os.path.split(f)[1])[0]
+
+            template_id = self.retrieve_template_id_by_name(template_name)
+            assert template_id, 'Can\'t retrieve template {} in project {}'.format(
+                template_name, self.template_project)
+
+            logger.debug('Using template {}/{}'.format(template_name, template_id))
 
             # set up global vars for this deployment
             if hasattr(dep_info, 'params') and isinstance(dep_info['params'], dict):
@@ -275,7 +303,9 @@ class DNACTemplate(object):
             else:
                 global_params = {}
 
-            # iterate through devices configured
+            # iterate through devices configured, we provision all devices in one shot,
+            # so collect the target_info
+            target_info = []
             for device, items in dep_info.devices.items():
 
                 # update the variable assignment per device
@@ -284,29 +314,48 @@ class DNACTemplate(object):
                     params.update(items['params'])
                 except (TypeError, KeyError):
                     pass
-                
-                print(template_name, device, params)
 
-                # TODO: 
-                # - fetch template id from template_name
-                # - assemble targetinfo, best using device name, not 
-                #     targetInfo = [{'id': deviceIp, 'type': "MANAGED_DEVICE_IP", "params": params}]
-                #
-                # found below code in Oren's repo.. 
-                #
-                # def DeployTemplate(templateId, deviceIp, params):
-                #     targetInfo = [{'id': deviceIp, 'type': "MANAGED_DEVICE_IP", "params": params}]
-                #     deploymentId = dnac.configuration_templates.deploy_template(forcePushTemplate=True,
-                #         isComposite=False, templateId=templateId, targetInfo=targetInfo)
-                #     time.sleep(2)
-                #     id = deploymentId["deploymentId"].split()
-                #     return (id[7])
+                target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": params})
 
-                # def IsDeploymentSuccessful(deploymentId):
-                #     time.sleep(5)
-                #     results = dnac.configuration_templates.get_template_deployment_status(deployment_id=deploymentId)
-                #     if results['status'] == "SUCCESS":
-                #         return(True)
-                #     else:
-                #         return(False)
+            logger.info('Deploying {} using on devices {}'.format(template_name, ', '.join([d['id'] for d in target_info])))
+            logger.debug('Target Info: {}'.format(target_info))
 
+            deployment_results['templates_processed'] += 1
+            deployment_results['devices_configured'] += len(target_info)
+
+            results = self.dnac.configuration_templates.deploy_template(
+                forcePushTemplate=True, isComposite=False, templateId=template_id, targetInfo=target_info)
+            logger.debug('Deployment request result: {}'.format(results))
+
+            # results returns deployment id within a text blob (sic), so extract
+            # {'deploymentId': 'Deployment of  Template: 93dc2023-d61e-4498-b045-bd1599959319.ApplicableTargets: [berlab-c9300-3]Template Deployemnt Id: 42446169-f534-4c7f-b356-52f6b4af7cfa',
+            #  'startTime': '', 'endTime': '', 'duration': '0 seconds'}
+            # and even typo in the response, double-sic...
+            m = re.search(r'Deployemnt Id: ([a-f0-9-]+)', results.deploymentId, re.I)
+            if m:
+                deployment_id = m.group(1)
+            else:
+                raise ValueError('Can\'t extract deployment id from API response {}'.format(results.deploymentId))
+
+            # check for status
+            i = 0
+            while i < 10:
+                time.sleep(2)
+                results = self.dnac.configuration_templates.get_template_deployment_status(deployment_id=deployment_id)
+                logger.debug('deployment status: {}'.format(results))
+                if results.status == 'IN_PROGRESS':
+                    i += 1
+                    continue
+                else:
+                    break
+            logger.info('deployment status: {}'.format(results.status))
+
+            if results.status != 'SUCCESS':
+                deployment_results['deployment_failures'] += 1
+
+        if result_json:
+            logger.info('Writing results to {}'.format(result_json))
+            with open(result_json, 'w') as fd:
+                fd.write(json.dumps(deployment_results, indent=2) + '\n')
+
+        return deployment_results['deployment_failures'] == 0

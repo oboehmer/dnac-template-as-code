@@ -3,6 +3,5 @@ params:
   SNMP_RW_COMMUNITY: bar
 
 devices:
-  berlab-c9300-1.berlab.de:
-
-  berlab-c9300-5.berlab.de:
+  berlab-c9300-3:
+  berlab-c9300-9.berlab.de:
