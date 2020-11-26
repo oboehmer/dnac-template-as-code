@@ -32,7 +32,7 @@ class Notify(object):
         # login to Webex
         self.api = WebexTeamsAPI(access_token=token)
 
-    def notify(self, message, roomid=None, persons=[], result_json=None):
+    def notify(self, message, roomid=None, persons=[], result_json=None, attach=None):
         '''
         send notification to rooms and/or persons identified in the config file
         '''
@@ -61,13 +61,18 @@ class Notify(object):
                 else:
                     persons = p
 
+        if attach and os.path.isfile(attach):
+            files = [attach]
+        else:
+            files = None
+
         if roomid:
-            self.api.messages.create(markdown=message, text=message, roomId=roomid)
+            self.api.messages.create(markdown=message, text=message, roomId=roomid, files=files)
         for p in persons:
             if '@' in p:
-                self.api.messages.create(markdown=message, text=message, toPersonEmail=p)
+                self.api.messages.create(markdown=message, text=message, toPersonEmail=p, files=files)
             else:
-                self.api.messages.create(markdown=message, text=message, toPersonId=p)
+                self.api.messages.create(markdown=message, text=message, toPersonId=p, files=files)
 
 
 if __name__ == '__main__':
@@ -75,6 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--room', help='WebexTeams room id to send to')
     parser.add_argument('--person', help='person ID or email (multiple values can be specified, comma-separated')
     parser.add_argument('--config', help='config file to use')
+    parser.add_argument('--attach', help='file to attach (only single file allowed at the moment). Note that no error is thrown if file doesn\'t exist')
     parser.add_argument('--results', action='append', help='load results from json file(s), use multiple times for multiple files (default: no result)')
     parser.add_argument('message', nargs=argparse.REMAINDER, help='message to be sent')
     args = parser.parse_args()
@@ -88,4 +94,4 @@ if __name__ == '__main__':
         sys.exit(1)
 
     notif = Notify(config_file=args.config)
-    notif.notify(' '.join(args.message), roomid=args.room, persons=persons, result_json=args.results)
+    notif.notify(' '.join(args.message), roomid=args.room, persons=persons, result_json=args.results, attach=args.attach)
