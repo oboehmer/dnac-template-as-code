@@ -36,11 +36,11 @@ provision_templates:
 preview_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
-  # artifacts:
-  #   paths:
-  #     - previews
+  artifacts:
+    paths:
+      - template-preview.txt
   script:
-    - python scripts/deploy_templates.py $ARG_CONFIG --preview --deploy_dir deployment/ --debug
+    - python scripts/preview_templates.py $ARG_CONFIG --outfile template-preview.txt --deploy_dir deployment/ --debug
 
 deploy_templates:
   image: ${RUNNER_IMAGE}
@@ -77,11 +77,11 @@ notify_success:
   stage: notify
   when: on_success
   script:
-    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
+    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json --attach template-preview.txt "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
 
 notify_failure:
   image: ${RUNNER_IMAGE}
   stage: notify
   when: on_failure
   script:
-    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json --attach template-preview.txt "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"

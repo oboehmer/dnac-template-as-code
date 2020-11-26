@@ -159,7 +159,6 @@ class DNACTemplate(object):
         TODL Templates which have previously provisioned but which have been removed
         on git are also removed from DNAC
         '''
-        errors = 0
         results = {
             'message': 'DNAC template provisioning run from {} UTC'.format(datetime.utcnow()),
             'created': 0,
@@ -287,11 +286,31 @@ class DNACTemplate(object):
 
         return results['errors'] == 0
 
-    def deploy_templates(self, dir_or_file, result_json=None, only_preview=False):
+    def _log_preview(self, msg, fd=None):
+        logger.info(msg)
+        if fd:
+            fd.write(msg + '\n')
+
+    def preview_templates(self, dir_or_file, preview_file=None):
+
+        if preview_file:
+            fd = open(preview_file, 'a+')
+        else:
+            fd = None
+
+        try:
+            rc = self.deploy_templates(dir_or_file, result_json=None, preview_fd=fd, preview=True)
+        finally:
+            if fd:
+                fd.close()
+
+        return rc
+
+    def deploy_templates(self, dir_or_file, result_json=None, preview_fd=None, preview=False):
         '''
         deploy the templates in template_dir based on yaml files
         in dir_or_file (or use a single file)
-        If preview == True, preview the template
+        If preview is True, just preview the template (no deployment)
         '''
 
         deployment_results = {
@@ -326,7 +345,9 @@ class DNACTemplate(object):
             logger.debug('Using template {}/{}'.format(template_name, template_id))
 
             # set up global vars for this deployment
-            if hasattr(dep_info, 'params') and isinstance(dep_info['params'], dict):
+            if hasattr(dep_info, 'params'):
+                assert isinstance(dep_info['params'], dict), \
+                    'params in deployment file {} must be yaml dictionary'.format(f)
                 global_params = dep_info['params']
             else:
                 global_params = {}
@@ -336,28 +357,32 @@ class DNACTemplate(object):
             target_info = []
             for device, items in dep_info.devices.items():
 
-                # update the variable assignment per device
-                params = global_params.copy()
-                try:
+                if items and 'params' in items:
+                    assert isinstance(items['params'], dict), \
+                        '{}.params in deployment file {} must be yaml dictionary'.format(device, f)
+                    # update the variable assignment per device
+                    params = global_params.copy()
                     params.update(items['params'])
-                except (TypeError, KeyError):
-                    pass
+                else:
+                    params = global_params
 
                 target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": params})
 
-            logger.info('Deploying {} using on devices {}'.format(template_name, ', '.join([d['id'] for d in target_info])))
-            logger.debug('Target Info: {}'.format(target_info))
+            logger.debug('Target Info collected: {}'.format(target_info))
 
-            deployment_results['templates_processed'] += 1
-
-            if only_preview:
+            if preview:
                 for t in target_info:
-                    logger.info('Trying preview on device {}, params: {}'.format(t['id'], t['params']))
+                    self._log_preview('# rendering template {} for device {}, params: {}'.format(
+                        template_name, t['id'], t['params']),
+                        preview_fd)
                     results = self.dnac.configuration_templates.preview_template(
                         templateId=template_id, params=t['params'])
-                    logger.info('\n{}\n'.format(results.cliPreview))
+                    self._log_preview('\n{}\n'.format(results.cliPreview), preview_fd)
+
                 continue
 
+            logger.info('Deploying {} using on devices {}'.format(template_name, ', '.join([d['id'] for d in target_info])))
+            deployment_results['templates_processed'] += 1
             deployment_results['devices_configured'] += len(target_info)
 
             results = self.dnac.configuration_templates.deploy_template(
@@ -390,7 +415,7 @@ class DNACTemplate(object):
             if results.status != 'SUCCESS':
                 deployment_results['deployment_failures'] += 1
 
-        if result_json:
+        if result_json and not preview:
             logger.info('Writing results to {}'.format(result_json))
             with open(result_json, 'w') as fd:
                 fd.write(json.dumps(deployment_results, indent=2) + '\n')
