@@ -1,4 +1,4 @@
-{% include "cidr_macro" %}
+{% include "__PROJECT__/cidr_macro" %}
 vlan {{ id }}
  name {{ name }}
 
