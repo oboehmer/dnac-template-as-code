@@ -4,7 +4,7 @@ template_name: Create-Vlan-and-SVI
 # parameters which apply to all devices
 params:
   id: 500
-  name: Test vlan 500
+  name: Test_500
 
 devices:
   berlab-c9300-3:
