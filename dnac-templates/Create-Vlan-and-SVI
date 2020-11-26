@@ -1,0 +1,16 @@
+{% include "cidr_macro" %}
+vlan {{ id }}
+ name {{ name }}
+
+{% if ip is defined %}
+interface Vlan{{ vlan }}
+  {% set t = ip.split('/') %}
+ ip address {{ t[0] }} {{ cidr_mask(t[1]) }}
+!
+{% endif %}
+{% for interface in __interface %}
+  {% if "trunk" in interface.portMode %}
+interface {{ interface.portName }}
+ switchport trunk allowed vlan add {{ id }}
+  {% endif%}
+{% endfor %}

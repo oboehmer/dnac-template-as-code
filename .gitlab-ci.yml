@@ -32,7 +32,16 @@ provision_templates:
   script:
     - python scripts/provision_templates.py $ARG_CONFIG --template_dir dnac-templates/ --results results.json --debug
 
-# when in master, deploy templates on devices
+# when in master, deploy templates on devices, otherwise just preview the output
+preview_templates:
+  image: ${RUNNER_IMAGE}
+  stage: deploy
+  # artifacts:
+  #   paths:
+  #     - previews
+  script:
+    - python scripts/deploy_templates.py $ARG_CONFIG --preview --deploy_dir deployment/ --debug
+
 deploy_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
