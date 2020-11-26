@@ -3,7 +3,7 @@ vlan {{ id }}
  name {{ name }}
 
 {% if ip is defined %}
-interface Vlan{{ vlan }}
+interface Vlan{{ id }}
   {% set t = ip.split('/') %}
  ip address {{ t[0] }} {{ cidr_mask(t[1]) }}
 !
