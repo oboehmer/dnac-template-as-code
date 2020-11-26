@@ -166,6 +166,7 @@ class DNACTemplate(object):
             'updated': 0,
             'skipped': 0,
             'deleted': 0,
+            'errors': 0,
         }
 
         # first remember which customers are currently provisioned so we can
@@ -189,6 +190,7 @@ class DNACTemplate(object):
 
             with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
+                template_content = re.sub('__PROJECT__', self.template_project, template_content)
 
             template_name = template_file
 
@@ -214,8 +216,14 @@ class DNACTemplate(object):
                 # create the template
                 logger.info('Creating template "{}"'.format(template_name))
                 logger.debug(params)
-                response = self.dnac.configuration_templates.create_template(**params)
-                results['created'] += 1
+                try:
+                    response = self.dnac.configuration_templates.create_template(**params)
+                except ApiError as e:
+                    logger.error(str(e))
+                    results['errors'] += 1
+                    continue
+                else:
+                    results['created'] += 1
             else:
                 # check if content changed
                 if template_content == current_template.templateContent:
@@ -239,8 +247,14 @@ class DNACTemplate(object):
                     'templateContent': template_content
                 }
                 logger.debug(params)
-                response = self.dnac.configuration_templates.update_template(current_template.id, **params)
-                results['updated'] += 1
+                try:
+                    response = self.dnac.configuration_templates.update_template(current_template.id, **params)
+                except ApiError as e:
+                    logger.error(str(e))
+                    results['errors'] += 1
+                    continue
+                else:
+                    results['updated'] += 1
 
             # check task and retrieve the template_id
             template_id = self.wait_and_check_status(response)
@@ -270,7 +284,8 @@ class DNACTemplate(object):
             logger.info('Writing results to {}'.format(result_json))
             with open(result_json, 'w') as fd:
                 fd.write(json.dumps(results, indent=2) + '\n')
-        return errors == 0
+
+        return results['errors'] == 0
 
     def deploy_templates(self, dir_or_file, result_json=None, only_preview=False):
         '''
