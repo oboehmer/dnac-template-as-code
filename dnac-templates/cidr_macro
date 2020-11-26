@@ -1,0 +1,68 @@
+{% macro cidr_mask(cidr) %}
+{% if cidr == "1" %}
+  {% set mask = "128.0.0.0" %}
+{% elif cidr == "2" %}
+  {% set mask = "192.0.0.0" %}
+{% elif cidr == "3" %}
+  {% set mask = "224.0.0.0" %}
+{% elif cidr == "4" %}
+  {% set mask = "240.0.0.0" %}
+{% elif cidr == "5" %}
+  {% set mask = "248.0.0.0" %}
+{% elif cidr == "6" %}
+  {% set mask = "252.0.0.0" %}
+{% elif cidr == "7" %}
+  {% set mask = "254.0.0.0" %}
+{% elif cidr == "8" %}
+  {% set mask = "255.0.0.0" %}
+{% elif cidr == "9" %}
+  {% set mask = "255.128.0.0" %}
+{% elif cidr == "10" %}
+  {% set mask = "255.192.0.0" %}
+{% elif cidr == "11" %}
+  {% set mask = "255.224.0.0" %}
+{% elif cidr == "12" %}
+  {% set mask = "255.240.0.0" %}
+{% elif cidr == "13" %}
+  {% set mask = "255.248.0.0" %}
+{% elif cidr == "14" %}
+  {% set mask = "255.252.0.0" %}
+{% elif cidr == "15" %}
+  {% set mask = "255.254.0.0" %}
+{% elif cidr == "16" %}
+  {% set mask = "255.255.0.0" %}
+{% elif cidr == "17" %}
+  {% set mask = "255.255.128.0" %}
+{% elif cidr == "18" %}
+  {% set mask = "255.255.192.0" %}
+{% elif cidr == "19" %}
+  {% set mask = "255.255.224.0" %}
+{% elif cidr == "20" %}
+  {% set mask = "255.255.240.0" %}
+{% elif cidr == "21" %}
+  {% set mask = "255.255.248.0" %}
+{% elif cidr == "22" %}
+  {% set mask = "255.255.252.0" %}
+{% elif cidr == "23" %}
+  {% set mask = "255.255.254.0" %}
+{% elif cidr == "24" %}
+  {% set mask = "255.255.255.0" %}
+{% elif cidr == "25" %}
+  {% set mask = "255.255.255.128" %}
+{% elif cidr == "26" %}
+  {% set mask = "255.255.255.192" %}
+{% elif cidr == "27" %}
+  {% set mask = "255.255.255.224" %}
+{% elif cidr == "28" %}
+  {% set mask = "255.255.255.240" %}
+{% elif cidr == "29" %}
+  {% set mask = "255.255.255.248" %}
+{% elif cidr == "30" %}
+  {% set mask = "255.255.255.252" %}
+{% elif cidr == "31" %}
+  {% set mask = "255.255.255.254" %}
+{% else %}
+    {% set mask = "255.255.255.255" %}
+{% endif %}
+{{ mask }}
+{% endmacro %}
