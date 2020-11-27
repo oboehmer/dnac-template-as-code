@@ -14,6 +14,7 @@ stages:
 before_script:
   - if [ "$CI_BUILD_REF_NAME" == "master" ] ; then ARG_CONFIG="" ; else ARG_CONFIG="--config scripts/config-preprod.yaml"; fi
   - echo ARG_CONFIG=$ARG_CONFIG
+  # - env | grep CI || true
 
 # perform some input validation of the templates and deploy yaml files
 validate:
@@ -27,6 +28,7 @@ provision_templates:
   image: ${RUNNER_IMAGE}
   stage: provision
   artifacts:
+    when: always
     paths:
       - results.json
   script:
@@ -37,6 +39,7 @@ preview_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
   artifacts:
+    when: always
     paths:
       - template-preview.txt
   script:
@@ -52,6 +55,7 @@ deploy_templates:
     refs:
       - master
   artifacts:
+    when: always
     paths:
       - results_deploy.json
   script:
@@ -61,6 +65,7 @@ test:
   image: ${RUNNER_IMAGE}
   stage: test
   artifacts:
+    when: always
     paths:
       - tests/out/
   script:
@@ -72,16 +77,19 @@ test:
 # we need multiple steps here as we want/need to differentiate between success
 # and failures.. the $(CI_JOB_STATUS) unfortunatly is not available in the
 # gitlab release used for this demo
+
 notify_success:
   image: ${RUNNER_IMAGE}
   stage: notify
   when: on_success
   script:
-    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json --attach template-preview.txt "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
+    - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
+    - python scripts/notify.py $ARG_CONFIG $ATTACH --results results.json --results results_deploy.json "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
 
 notify_failure:
   image: ${RUNNER_IMAGE}
   stage: notify
   when: on_failure
   script:
-    - python scripts/notify.py $ARG_CONFIG --results results.json --results results_deploy.json --attach template-preview.txt "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+    - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
+    - python scripts/notify.py $ARG_CONFIG $ATTACH --results results.json --results results_deploy.json --attach template-preview.txt "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"

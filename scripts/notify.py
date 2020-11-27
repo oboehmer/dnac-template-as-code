@@ -38,6 +38,7 @@ class Notify(object):
         '''
 
         if result_json:
+            message += '\n'
             for f in result_json:
                 try:
                     with open(f) as fd:
@@ -61,18 +62,34 @@ class Notify(object):
                 else:
                     persons = p
 
-        if attach and os.path.isfile(attach):
-            files = [attach]
-        else:
-            files = None
-
+        recepients = []
         if roomid:
-            self.api.messages.create(markdown=message, text=message, roomId=roomid, files=files)
+            recepients.append({'roomId': roomid})
+
         for p in persons:
             if '@' in p:
-                self.api.messages.create(markdown=message, text=message, toPersonEmail=p, files=files)
+                recepients.append({'toPersonEmail': p})
             else:
-                self.api.messages.create(markdown=message, text=message, toPersonId=p, files=files)
+                recepients.append({'toPersonId': p})
+
+        if not attach:
+            attach = []
+
+        for r in recepients:
+            # print('sending to {}, files={}'.format(r, files))
+            result = self.api.messages.create(markdown=message, text=message, **r)
+            # attach more files via replies to the message
+            while len(attach) > 0:
+                files = [attach.pop(0)]
+                if not os.path.exists(files[0]):
+                    print('File {} doesn\'t exist, ignoring error'.format(files[0]))
+                    continue
+
+                try:
+                    self.api.messages.create(text='', parentId=result.id, files=files, **r)
+                except Exception as e:
+                    print('Exception ignored while sending file: {}'.format(str(e)))
+                    pass
 
 
 if __name__ == '__main__':
@@ -80,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('--room', help='WebexTeams room id to send to')
     parser.add_argument('--person', help='person ID or email (multiple values can be specified, comma-separated')
     parser.add_argument('--config', help='config file to use')
-    parser.add_argument('--attach', help='file to attach (only single file allowed at the moment). Note that no error is thrown if file doesn\'t exist')
+    parser.add_argument('--attach', action='append', help='file to attach (repeat to attach more files).')
     parser.add_argument('--results', action='append', help='load results from json file(s), use multiple times for multiple files (default: no result)')
     parser.add_argument('message', nargs=argparse.REMAINDER, help='message to be sent')
     args = parser.parse_args()

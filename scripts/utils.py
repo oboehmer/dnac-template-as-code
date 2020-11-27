@@ -8,10 +8,10 @@ from attrdict import AttrDict
 def replace_env_vars(val):
     '''
     recursively replace references to environment variables in dict or list
-    strings (i.e. '%ENV(foobar)') by their respective value
+    strings (i.e. '%ENV{foobar}') by their respective value
     '''
     def _replace_env(val):
-        m = re.match(r'%ENV\(([^)]+)\)$', val)
+        m = re.match(r'%ENV{([^)]+)}$', val)
         if m:
             return os.environ.get(m.group(1), '')
         else:
