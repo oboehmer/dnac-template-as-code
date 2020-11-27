@@ -8,7 +8,7 @@ dnac:
   base_url: https://10.49.232.102
   version: 2.1.2
   username: cicd
-  password: '%ENV(DNAC_PASSWORD)'
+  password: '%ENV{DNAC_PASSWORD}'
   verify: False
 
 # DNAC project we maintain

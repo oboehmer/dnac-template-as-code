@@ -22,6 +22,7 @@ devices:
       cli:
         protocol: ssh
         ip: 10.49.232.52
+        proxy: ssh-jumphost
 
   berlab-c9300-9:
     type: router
@@ -41,3 +42,18 @@ devices:
       cli:
         protocol: ssh
         ip: 10.49.232.51
+        proxy: ssh-jumphost
+
+  ssh-jumphost:
+    type: server
+    os: linux
+    credentials:
+      default:
+        username: '%ENV{JUMPHOST_USER}'
+        password: '%ENV{JUMPHOST_PASSWORD}'
+    connections:
+      defaults:
+        class: unicon.Unicon
+      cli:
+        protocol: ssh
+        ip: 10.0.5.213

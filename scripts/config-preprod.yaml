@@ -8,7 +8,7 @@ dnac:
   base_url: https://10.49.232.102
   version: 2.1.2
   username: cicd
-  password: '%ENV(DNAC_PASSWORD)'
+  password: '%ENV{DNAC_PASSWORD}'
   verify: False
 
 # DNAC project we maintain
@@ -18,4 +18,4 @@ notify:
   # specify room_id and/or WebexTeams person email
   # room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
   persons:
-    - '%ENV(GITLAB_USER_EMAIL)'
+    - '%ENV{GITLAB_USER_EMAIL}'
