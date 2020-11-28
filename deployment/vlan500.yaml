@@ -1,5 +1,6 @@
 
 template_name: Create-Vlan-and-SVI
+test_template: vlan-svi-tests.j2
 
 # parameters which apply to all devices
 params:

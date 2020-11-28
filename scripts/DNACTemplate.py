@@ -10,6 +10,7 @@ from attrdict import AttrDict
 import urllib3
 import yaml
 from dnacentersdk import api, ApiError
+from jinja2 import Environment, FileSystemLoader
 
 from utils import read_config
 
@@ -17,13 +18,22 @@ urllib3.disable_warnings()
 logger = logging.getLogger(os.path.basename(__file__))
 
 
+def _basename(path):
+    # foo/bar/baz/filename.txt --> filename
+    return os.path.splitext(os.path.split(path)[1])[0]
+
+
 class DNACTemplate(object):
 
-    def __init__(self, config_file=None, project=None):
+    def __init__(self, config_file=None, project=None, connect=True):
         # read config file
         if config_file is None:
             config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
         self.config = read_config(config_file)
+
+        if connect is False:
+            return
+
         # login to DNAC
         try:
             self.dnac = api.DNACenterAPI(**self.config.dnac)
@@ -306,6 +316,46 @@ class DNACTemplate(object):
 
         return rc
 
+    def parse_deployment_file(self, deployment_file):
+        '''
+        Parses a deployment file and returns the contents in a structure
+        with all device params expanded
+        '''
+        logger.info('processing {}'.format(deployment_file))
+        with open(deployment_file) as fd:
+            result = yaml.safe_load(fd.read())
+
+        if 'template_name' not in result:
+            result['template_name'] = _basename(deployment_file)
+
+        # set up global vars for this deployment
+        if 'params' in result:
+            assert isinstance(result['params'], dict), \
+                'params in deployment file {} must be yaml dictionary'.format(deployment_file)
+            global_params = result['params']
+        else:
+            global_params = {}
+
+        # iterate through devices configured
+        for device, items in result['devices'].items():
+            if items is None:
+                # in case no params defined under device
+                result['devices'][device] = {}
+            result['devices'][device]['name'] = device
+
+            if items and 'params' in items:
+                assert isinstance(items['params'], dict), \
+                    '{}.params in deployment file {} must be yaml dictionary'.format(device, deployment_file)
+                # update the variable assignment per device
+                params = global_params.copy()
+                params.update(items['params'])
+            else:
+                params = global_params
+            result['devices'][device]['params'] = params
+
+        logger.debug('result: {}'.format(result))
+        return AttrDict(result)
+
     def deploy_templates(self, dir_or_file, result_json=None, preview_fd=None, preview=False):
         '''
         deploy the templates in template_dir based on yaml files
@@ -329,51 +379,23 @@ class DNACTemplate(object):
 
         for f in files:
 
-            logger.info('processing {}'.format(f))
-            with open(f) as fd:
-                dep_info = AttrDict(yaml.safe_load(fd.read()))
+            dep_info = self.parse_deployment_file(f)
 
-            try:
-                template_name = dep_info.template_name
-            except AttributeError:
-                template_name = os.path.splitext(os.path.split(f)[1])[0]
-
-            template_id = self.retrieve_template_id_by_name(template_name)
+            template_id = self.retrieve_template_id_by_name(dep_info.template_name)
             assert template_id, 'Can\'t retrieve template {} in project {}'.format(
-                template_name, self.template_project)
+                dep_info.template_name, self.template_project)
+            logger.debug('Using template {}/{}'.format(dep_info.template_name, template_id))
 
-            logger.debug('Using template {}/{}'.format(template_name, template_id))
-
-            # set up global vars for this deployment
-            if hasattr(dep_info, 'params'):
-                assert isinstance(dep_info['params'], dict), \
-                    'params in deployment file {} must be yaml dictionary'.format(f)
-                global_params = dep_info['params']
-            else:
-                global_params = {}
-
-            # iterate through devices configured, we provision all devices in one shot,
-            # so collect the target_info
             target_info = []
             for device, items in dep_info.devices.items():
-
-                if items and 'params' in items:
-                    assert isinstance(items['params'], dict), \
-                        '{}.params in deployment file {} must be yaml dictionary'.format(device, f)
-                    # update the variable assignment per device
-                    params = global_params.copy()
-                    params.update(items['params'])
-                else:
-                    params = global_params
-
-                target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": params})
+                target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": items['params']})
 
             logger.debug('Target Info collected: {}'.format(target_info))
 
             if preview:
                 for t in target_info:
                     self._log_preview('# rendering template {} for device {}, params: {}'.format(
-                        template_name, t['id'], t['params']),
+                        dep_info.template_name, t['id'], t['params']),
                         preview_fd)
                     results = self.dnac.configuration_templates.preview_template(
                         templateId=template_id, params=t['params'])
@@ -381,7 +403,7 @@ class DNACTemplate(object):
 
                 continue
 
-            logger.info('Deploying {} using on devices {}'.format(template_name, ', '.join([d['id'] for d in target_info])))
+            logger.info('Deploying {} using on devices {}'.format(dep_info.template_name, ', '.join([d['id'] for d in target_info])))
             deployment_results['templates_processed'] += 1
             deployment_results['devices_configured'] += len(target_info)
 
@@ -421,3 +443,57 @@ class DNACTemplate(object):
                 fd.write(json.dumps(deployment_results, indent=2) + '\n')
 
         return deployment_results['deployment_failures'] == 0
+
+    def render_tests(self, dir_or_file, out_dir, template_dir=None):
+        '''
+        render tests from deployment files
+        Use the same params structure used to preview/apply templates,
+        but render jinja2 templates kept in template_dir
+        '''
+        if not template_dir:
+            template_dir = os.path.join(os.path.dirname(__file__), '../tests/templates')
+
+        try:
+            os.mkdir(out_dir)
+        except FileExistsError:
+            pass
+
+        if os.path.isdir(dir_or_file):
+            files = [os.path.join(dir_or_file, f)
+                     for f in os.listdir(dir_or_file)
+                     if not f.startswith('.')]
+        else:
+            files = [dir_or_file]
+
+        for f in files:
+
+            dep_info = self.parse_deployment_file(f)
+
+            if 'test_template' not in dep_info:
+                logger.debug('no test_template referenced in {}, skipping'.format(f))
+                continue
+
+            template_file = os.path.join(template_dir, dep_info.test_template)
+            with open(template_file) as fd:
+                content = fd.read()
+
+            template = Environment(loader=FileSystemLoader(template_dir)).from_string(content)
+            # template = Environment(loader=BaseLoader)(fd.read())
+
+            # we pass the device params a as list of dicts to jinja2
+            devices = []
+            for d, items in dep_info.devices.items():
+                devices.append(items)
+
+            test_content = template.render(devices=devices)
+            logger.debug('Rendering {} produced:\n{}'.format(dep_info.test_template, test_content))
+
+            robot_file = '{}/{}_{}.robot'.format(
+                out_dir, 
+                _basename(dep_info.test_template),
+                _basename(f))
+            logger.info('Creating {}'.format(robot_file))
+            with open(robot_file, 'w') as fd:
+                fd.write(test_content)
+
+            return True

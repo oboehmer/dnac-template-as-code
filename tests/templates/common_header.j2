@@ -1,0 +1,18 @@
+*** Settings ***
+Library       pyats.robot.pyATSRobot
+Library       unicon.robot.UniconRobot
+Library       genie.libs.robot.GenieRobot
+Library       Collections
+
+Suite Setup   setup
+
+*** Variables ***
+${testbed}       ./testbed.yaml
+
+*** Keywords ***
+setup
+    # '[ WARN ] Could not load the Datafile correctly' can be ignored
+    use genie testbed "${testbed}"
+
+*** Test Cases ***
+
