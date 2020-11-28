@@ -14,7 +14,6 @@ stages:
 before_script:
   - if [ "$CI_BUILD_REF_NAME" == "master" ] ; then ARG_CONFIG="" ; else ARG_CONFIG="--config scripts/config-preprod.yaml"; fi
   - echo ARG_CONFIG=$ARG_CONFIG
-  # - env | grep CI || true
 
 # perform some input validation of the templates and deploy yaml files
 validate:
@@ -69,9 +68,9 @@ test:
     paths:
       - tests/out/
   script:
-    - cd tests
+    - python scripts/render_tests.py --deploy_dir deployment/ --out_dir tests/deploy/ --debug
     # run all robot in this directory (recursively)
-    - robot --outputdir out/ --extension robot .
+    - cd tests ; robot --name 'DNAC Template Tests' --outputdir out/ --extension robot .
 
 # last step in the pipeline to report status
 # we need multiple steps here as we want/need to differentiate between success

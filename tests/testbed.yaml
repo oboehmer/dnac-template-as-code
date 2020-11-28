@@ -25,6 +25,7 @@ devices:
         proxy: ssh-jumphost
 
   berlab-c9300-9:
+    alias: berlab-c9300-9.berlab.de
     type: router
     os: ios
     custom:

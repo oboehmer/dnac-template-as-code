@@ -19,3 +19,4 @@ notify:
   # room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
   persons:
     - '%ENV{GITLAB_USER_EMAIL}'
+    # - oboehmer@cisco.com

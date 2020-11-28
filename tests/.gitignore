@@ -1,4 +1,5 @@
 out/
+deploy/
 log.html
 report.html
 output.xml

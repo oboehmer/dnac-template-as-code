@@ -1,0 +1,19 @@
+{% include "common_header.j2" %}
+
+{% for device in devices %}
+test for Vlan {{ device.params.id }} on device {{ device.name }}
+    connect to device "{{ device.name }}"
+    ${result}=  parse "show vlan" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    Dictionary Should Contain Key   ${result}[vlans]   {{ device.params.id }}   msg=Vlan {{ device.params.id }} does not exist
+    Should be Equal    ${result}[vlans][{{ device.params.id }}][name]     {{ device.params.name }}   msg=Vlan name does not match
+
+{% if device.params.ip %}
+test for SVI {{ device.params.id }} on device {{ device.name }}
+    connect to device "{{ device.name }}"
+    ${result}=  parse "show interfaces" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    Dictionary Should Contain Key    ${result}[Vlan{{ device.params.id }}][ipv4]   {{ device.params.ip }}
+{% endif %}
+
+{% endfor %}
