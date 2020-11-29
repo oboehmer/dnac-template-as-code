@@ -21,7 +21,7 @@ Any changes to the aforementioned data will trigger a (re-)deployment of the tem
 
 Configuration items like DNAC endpoint, credentials, DNAC template project name and some other data is stored in yaml files. We maintain different config files for master-branch (config.yaml) and non-master branches (config-preprod.yaml). This will enable you to use different environments, like prod and preprod.
 
-Configuration items can reference environment variables (i.e. `password: '%ENV(DNAC_PASSWORD)'`), useful to keep password credentials out of the git repo.
+Configuration items can reference environment variables (i.e. `password: '%ENV{DNAC_PASSWORD}'`), useful to keep password credentials or other sensitive value out of the git repo.
 
 The pipeline assumes a few variables to be set in the gitlab Runner's environment:
 - `RUNNER_IMAGE`, set to docker image, see <scripts/Dockerfile> for the build we're using in the demo

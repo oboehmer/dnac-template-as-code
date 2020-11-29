@@ -2,28 +2,27 @@
 import os
 import sys
 
-import yaml
 from jinja2 import Environment
+from DNACTemplate import DNACTemplate
 
 YAML_DIRS = ['deployment/']
 TEMPLATE_DIRS = ['dnac-templates/']
 
 errors = []
 
+dnac = DNACTemplate(connect=False)
+
 for d in YAML_DIRS:
     for f in os.listdir(d):
-        if f.startswith('.'):
+        if f.startswith('.') or not (f.endswith('.yaml') or f.endswith('.yml')):
             continue
 
         filename = os.path.join(d, f)
         print('Examining {}'.format(filename))
         try:
-            with open(filename) as fd:
-                content = fd.read()
-
-            yaml.safe_load(content)
+            dnac.parse_deployment_file(filename)
         except Exception as e:
-            msg = 'ERROR: YAML validation failed for {}'.format(filename)
+            msg = 'ERROR: YAML deployment validation failed for {}'.format(filename)
             print(msg + ':\n' + str(e))
             errors.append(msg)
 

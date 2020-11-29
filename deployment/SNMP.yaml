@@ -10,7 +10,9 @@ params:
 devices:
   berlab-c9300-3:
   berlab-c9300-9.berlab.de:
-    # for demo, we use different communities for this device
+    # for demo, we use different communities for this device, and also apply two different ones
     params:
-      SNMP_RO_COMMUNITY: foo1
-      SNMP_RW_COMMUNITY: bar1
+      - SNMP_RO_COMMUNITY: foo1
+        SNMP_RW_COMMUNITY: bar1
+      - SNMP_RO_COMMUNITY: foo2
+        SNMP_RW_COMMUNITY: bar2

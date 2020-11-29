@@ -10,7 +10,7 @@ from attrdict import AttrDict
 import urllib3
 import yaml
 from dnacentersdk import api, ApiError
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, meta
 
 from utils import read_config
 
@@ -90,7 +90,7 @@ class DNACTemplate(object):
                 return t.templateId
         return None
 
-    def get_template_params(self, content, language):
+    def get_template_params(self, content, language, template_dir):
         '''
         extracts referenced jinja2 variables and returns params list.
         '''
@@ -101,8 +101,7 @@ class DNACTemplate(object):
 
         # return []
         if language == 'JINJA':
-            from jinja2 import Environment, PackageLoader, meta
-            env = Environment(loader=PackageLoader('gummi', 'templates'))
+            env = Environment(loader=FileSystemLoader(template_dir))
             parsed_content = env.parse(content)
             variables = meta.find_undeclared_variables(parsed_content)
         else:
@@ -119,11 +118,6 @@ class DNACTemplate(object):
                     'order': order,
                     'customOrder': 0})
                 order += 1
-            # d ={'parameterName': 'password', 'dataType': 'STRING', 'defaultValue': None,
-            # 'description': None, 'required': True, 'notParam': False, 'paramArray': False,
-            # 'displayName': None, 'instructionText': None, 'group': None, 'order': 2,
-            # 'customOrder': 0, 'selection': None, 'range': [], 'key': None, 'provider':
-            # None, 'binding': '', 'id': '869b0b95-8831-4e9e-9480-5268755bb270'}
 
         return params
 
@@ -219,7 +213,7 @@ class DNACTemplate(object):
                     'softwareType': "IOS-XE",
                     'softwareVersion': None,
                     'tags': [],
-                    'templateParams': self.get_template_params(template_content, language),
+                    'templateParams': self.get_template_params(template_content, language, template_dir),
                     'templateContent': template_content
                 }
                 # create the template
@@ -251,8 +245,7 @@ class DNACTemplate(object):
                     'composite': current_template.composite,
                     'softwareType': current_template.softwareType,
                     'deviceTypes': current_template.deviceTypes,
-                    # 'templateParams': self.get_template_params(template_content, language),
-                    'templateParams': current_template.templateParams,
+                    'templateParams': self.get_template_params(template_content, language, template_dir),
                     'templateContent': template_content
                 }
                 logger.debug(params)
@@ -296,26 +289,6 @@ class DNACTemplate(object):
 
         return results['errors'] == 0
 
-    def _log_preview(self, msg, fd=None):
-        logger.info(msg)
-        if fd:
-            fd.write(msg + '\n')
-
-    def preview_templates(self, dir_or_file, preview_file=None):
-
-        if preview_file:
-            fd = open(preview_file, 'a+')
-        else:
-            fd = None
-
-        try:
-            rc = self.deploy_templates(dir_or_file, result_json=None, preview_fd=fd, preview=True)
-        finally:
-            if fd:
-                fd.close()
-
-        return rc
-
     def parse_deployment_file(self, deployment_file):
         '''
         Parses a deployment file and returns the contents in a structure
@@ -324,6 +297,9 @@ class DNACTemplate(object):
         logger.info('processing {}'.format(deployment_file))
         with open(deployment_file) as fd:
             result = yaml.safe_load(fd.read())
+
+        if not result or not isinstance(result, dict):
+            raise ValueError('{} does not look like a YAML file'.format(deployment_file))
 
         if 'template_name' not in result:
             result['template_name'] = _basename(deployment_file)
@@ -344,17 +320,49 @@ class DNACTemplate(object):
             result['devices'][device]['name'] = device
 
             if items and 'params' in items:
-                assert isinstance(items['params'], dict), \
-                    '{}.params in deployment file {} must be yaml dictionary'.format(device, deployment_file)
+                # we can define a single var/value dict for device,
+                # or a list of var/value dicts in which case the template
+                # will be applied multiple times with different values
+                params = []
+                if isinstance(items['params'], dict):
+                    param_list = [items['params']]
+                elif isinstance(items['params'], list):
+                    param_list = items['params']
+                elif items['params'] is None:
+                    # allow to remove global params with an empty param list
+                    param_list = [{}]
+                else:
+                    raise ValueError('{} params need to be dict, list or None'.format(device))
                 # update the variable assignment per device
-                params = global_params.copy()
-                params.update(items['params'])
+                for i, p in enumerate(param_list):
+                    params.append(global_params.copy())
+                    params[i].update(p)
             else:
-                params = global_params
+                params = [global_params]
             result['devices'][device]['params'] = params
 
         logger.debug('result: {}'.format(result))
         return AttrDict(result)
+
+    def _log_preview(self, msg, fd=None):
+        logger.info(msg)
+        if fd:
+            fd.write(msg + '\n')
+
+    def preview_templates(self, dir_or_file, preview_file=None):
+
+        if preview_file:
+            fd = open(preview_file, 'a+')
+        else:
+            fd = None
+
+        try:
+            rc = self.deploy_templates(dir_or_file, result_json=None, preview_fd=fd, preview=True)
+        finally:
+            if fd:
+                fd.close()
+
+        return rc
 
     def deploy_templates(self, dir_or_file, result_json=None, preview_fd=None, preview=False):
         '''
@@ -373,7 +381,7 @@ class DNACTemplate(object):
         if os.path.isdir(dir_or_file):
             files = [os.path.join(dir_or_file, f)
                      for f in os.listdir(dir_or_file)
-                     if not f.startswith('.')]
+                     if not f.startswith('.') and (f.endswith('.yaml') or f.endswith('.yml'))]
         else:
             files = [dir_or_file]
 
@@ -388,8 +396,8 @@ class DNACTemplate(object):
 
             target_info = []
             for device, items in dep_info.devices.items():
-                target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": items['params']})
-
+                for p in items['params']:
+                    target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": p})
             logger.debug('Target Info collected: {}'.format(target_info))
 
             if preview:
@@ -461,7 +469,7 @@ class DNACTemplate(object):
         if os.path.isdir(dir_or_file):
             files = [os.path.join(dir_or_file, f)
                      for f in os.listdir(dir_or_file)
-                     if not f.startswith('.')]
+                     if not f.startswith('.') and (f.endswith('.yaml') or f.endswith('.yml'))]
         else:
             files = [dir_or_file]
 
@@ -478,22 +486,25 @@ class DNACTemplate(object):
                 content = fd.read()
 
             template = Environment(loader=FileSystemLoader(template_dir)).from_string(content)
-            # template = Environment(loader=BaseLoader)(fd.read())
 
-            # we pass the device params a as list of dicts to jinja2
+            # populate device list for Jinja2 rendering. As we might have multiple params
+            # dicts per device (we can apply the same template multiple times with different params)
+            # we append this device multiple times (each with different params) for Jinja so the
+            # test template author doesn't have to worry about this
             devices = []
-            for d, items in dep_info.devices.items():
-                devices.append(items)
+            for dev, items in dep_info.devices.items():
+                for p in items['params']:
+                    devices.append({'name': dev, 'params': p})
 
             test_content = template.render(devices=devices)
             logger.debug('Rendering {} produced:\n{}'.format(dep_info.test_template, test_content))
 
             robot_file = '{}/{}_{}.robot'.format(
-                out_dir, 
+                out_dir,
                 _basename(dep_info.test_template),
                 _basename(f))
             logger.info('Creating {}'.format(robot_file))
             with open(robot_file, 'w') as fd:
                 fd.write(test_content)
 
-            return True
+        return True
