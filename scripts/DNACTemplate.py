@@ -373,7 +373,7 @@ class DNACTemplate(object):
 
         deployment_results = {
             'message': 'DNAC template deployment run from {} UTC'.format(datetime.utcnow()),
-            'templates_processed': 0,
+            'deployment_runs': 0,
             'devices_configured': 0,
             'deployment_failures': 0,
         }
@@ -394,58 +394,67 @@ class DNACTemplate(object):
                 dep_info.template_name, self.template_project)
             logger.debug('Using template {}/{}'.format(dep_info.template_name, template_id))
 
-            target_info = []
+            all_targets = []
             for device, items in dep_info.devices.items():
                 for p in items['params']:
-                    target_info.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": p})
-            logger.debug('Target Info collected: {}'.format(target_info))
+                    all_targets.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": p})
+            logger.debug('Target Info collected: {}'.format(all_targets))
 
-            if preview:
-                for t in target_info:
+            devices_configured = {}
+
+            for target_info in all_targets:
+
+                if preview:
                     self._log_preview('# rendering template {} for device {}, params: {}'.format(
-                        dep_info.template_name, t['id'], t['params']),
+                        dep_info.template_name, target_info['id'], target_info['params']),
                         preview_fd)
                     results = self.dnac.configuration_templates.preview_template(
-                        templateId=template_id, params=t['params'])
+                        templateId=template_id, params=target_info['params'])
                     self._log_preview('\n{}\n'.format(results.cliPreview), preview_fd)
 
-                continue
-
-            logger.info('Deploying {} using on devices {}'.format(dep_info.template_name, ', '.join([d['id'] for d in target_info])))
-            deployment_results['templates_processed'] += 1
-            deployment_results['devices_configured'] += len(target_info)
-
-            results = self.dnac.configuration_templates.deploy_template(
-                forcePushTemplate=True, isComposite=False, templateId=template_id, targetInfo=target_info)
-            logger.debug('Deployment request result: {}'.format(results))
-
-            # results returns deployment id within a text blob (sic), so extract
-            # {'deploymentId': 'Deployment of  Template: 93dc2023-d61e-4498-b045-bd1599959319.ApplicableTargets: [berlab-c9300-3]Template Deployemnt Id: 42446169-f534-4c7f-b356-52f6b4af7cfa',
-            #  'startTime': '', 'endTime': '', 'duration': '0 seconds'}
-            # and even typo in the response, double-sic...
-            m = re.search(r'Deployemnt Id: ([a-f0-9-]+)', results.deploymentId, re.I)
-            if m:
-                deployment_id = m.group(1)
-            else:
-                raise ValueError('Can\'t extract deployment id from API response {}'.format(results.deploymentId))
-
-            # check for status
-            i = 0
-            while i < 10:
-                time.sleep(2)
-                results = self.dnac.configuration_templates.get_template_deployment_status(deployment_id=deployment_id)
-                logger.debug('deployment status: {}'.format(results))
-                if results.status == 'IN_PROGRESS':
-                    i += 1
-                    continue
                 else:
-                    break
-            logger.info('deployment status: {}'.format(results.status))
+                    logger.info('Deploying {} using params {} on device {}'.format(
+                        dep_info.template_name, target_info['params'], target_info['id']))
+                    deployment_results['deployment_runs'] += 1
+                    devices_configured[target_info['id']] = 1
 
-            if results.status != 'SUCCESS':
-                deployment_results['deployment_failures'] += 1
+                    results = self.dnac.configuration_templates.deploy_template(
+                        forcePushTemplate=True, isComposite=False,
+                        templateId=template_id, targetInfo=[target_info])
+                    logger.debug('Deployment request result: {}'.format(results))
+
+                    # results returns deployment id within a text blob (sic), so extract
+                    # {'deploymentId': 'Deployment of  Template:
+                    # 93dc2023-d61e-4498-b045-bd1599959319.ApplicableTargets:
+                    # [berlab-c9300-3]Template Deployemnt Id: 42446169-f534-4c7f-b356-52f6b4af7cfa',
+                    #  'startTime': '', 'endTime': '', 'duration': '0 seconds'}
+                    # and even typo in the response, double-sic...
+                    m = re.search(r'Deployemnt Id: ([a-f0-9-]+)', results.deploymentId, re.I)
+                    if m:
+                        deployment_id = m.group(1)
+                    else:
+                        raise ValueError('Can\'t extract deployment id from API response {}'.format(
+                            results.deploymentId))
+
+                    # check for status
+                    i = 0
+                    while i < 10:
+                        time.sleep(2)
+                        results = self.dnac.configuration_templates.get_template_deployment_status(
+                            deployment_id=deployment_id)
+                        logger.debug('deployment status: {}'.format(results))
+                        if results.status == 'IN_PROGRESS':
+                            i += 1
+                            continue
+                        else:
+                            break
+                    logger.info('deployment status: {}'.format(results.status))
+
+                    if results.status != 'SUCCESS':
+                        deployment_results['deployment_failures'] += 1
 
         if result_json and not preview:
+            deployment_results['devices_configured'] = len(devices_configured)
             logger.info('Writing results to {}'.format(result_json))
             with open(result_json, 'w') as fd:
                 fd.write(json.dumps(deployment_results, indent=2) + '\n')
