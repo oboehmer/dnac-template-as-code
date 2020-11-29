@@ -66,7 +66,8 @@ test:
   artifacts:
     when: always
     paths:
-      - tests/out/
+      - tests/out/*
+      - tests/deploy/*
   script:
     - python scripts/render_tests.py --deploy_dir deployment/ --out_dir tests/deploy/ --debug
     # run all robot in this directory (recursively)
@@ -91,4 +92,4 @@ notify_failure:
   when: on_failure
   script:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
-    - python scripts/notify.py $ARG_CONFIG $ATTACH --results results.json --results results_deploy.json --attach template-preview.txt "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+    - python scripts/notify.py $ARG_CONFIG $ATTACH --results results.json --results results_deploy.json "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
