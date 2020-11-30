@@ -30,7 +30,7 @@ provision_templates:
     paths:
       - results-1-provision.json
   script:
-    - python scripts/provision_templates.py --config $CONFIG_YAML --template_dir $TEMPLATE_DIR --results results-1-provision.json --debug
+    - python scripts/provision_templates.py --config $CONFIG_YAML --template_dir $TEMPLATE_DIR --results results-1-provision.json $DEBUG
 
 preview_templates:
   image: ${RUNNER_IMAGE}
@@ -40,7 +40,7 @@ preview_templates:
     paths:
       - template-preview.txt
   script:
-    - python scripts/preview_templates.py --config $CONFIG_YAML --outfile template-preview.txt --deploy_dir $DEPLOY_DIR --debug
+    - python scripts/preview_templates.py --config $CONFIG_YAML --outfile template-preview.txt --deploy_dir $DEPLOY_DIR $DEBUG
 
 #  deploy templates on devices (environment controlled through vars.sh settigns)
 deploy_templates:
@@ -55,7 +55,7 @@ deploy_templates:
     paths:
       - results-2-deploy.json
   script:
-    - python scripts/deploy_templates.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --results results-2-deploy.json --debug
+    - python scripts/deploy_templates.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --results results-2-deploy.json $DEBUG
 
 test:
   image: ${RUNNER_IMAGE}
@@ -67,7 +67,7 @@ test:
       - tests/deploy/*
       - results-3-tests.json
   script:
-    - rm -rf tests/deploy ; python scripts/render_tests.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --out_dir tests/deploy/ --debug
+    - rm -rf tests/deploy ; python scripts/render_tests.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --out_dir tests/deploy/ $DEBUG
     # run all robot in this directory (recursively)
     - cd tests
     - robot --name 'DNAC Template Tests' --outputdir out/ --variable testbed:$TESTBED --extension robot .
