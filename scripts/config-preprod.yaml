@@ -5,9 +5,9 @@
 #   password: '%ENV(DNAC_PASSWORD)'
 #
 dnac:
-  base_url: https://10.49.232.102
+  base_url: https://10.49.232.103
   version: 2.1.2
-  username: cicd
+  username: CLEUR21
   password: '%ENV{DNAC_PASSWORD}'
   verify: False
 

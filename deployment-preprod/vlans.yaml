@@ -1,0 +1,16 @@
+
+template_name: Create-Vlan-and-SVI
+test_template: vlan-svi-tests.j2
+
+# this deployment file contains a list of params (i.e. multiple vlans).
+# In this case the DNAC template above will be applied multiple times,
+# each time with a discrete params set.
+# The same holds true for the test creation where test templates are
+# rendered for each device/param set
+
+devices:
+  berlab-c9300-1.berlab.de:
+    params:
+      - id: 500
+        name: Test_500
+        ip: 192.168.99.1/24
