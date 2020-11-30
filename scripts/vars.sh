@@ -5,7 +5,7 @@
 TEMPLATE_DIR="dnac-templates/"
 
 if [ "$CI_BUILD_REF_NAME" == "master" ] ; then 
-    CONFIG_YAML""
+    CONFIG_YAML="scripts/config.yaml"
     DEPLOY_DIR="deployment/"
     TESTBED="testbed.yaml"
 else 
