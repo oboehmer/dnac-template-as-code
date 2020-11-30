@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 import logging
 import os
 import re
@@ -12,7 +11,7 @@ import yaml
 from dnacentersdk import api, ApiError
 from jinja2 import Environment, FileSystemLoader, meta
 
-from utils import read_config
+from utils import read_config, update_results_json
 
 urllib3.disable_warnings()
 logger = logging.getLogger(os.path.basename(__file__))
@@ -164,7 +163,6 @@ class DNACTemplate(object):
         on git are also removed from DNAC
         '''
         results = {
-            'message': 'DNAC template provisioning run from {} UTC'.format(datetime.utcnow()),
             'created': 0,
             'updated': 0,
             'skipped': 0,
@@ -186,19 +184,18 @@ class DNACTemplate(object):
 
         # process all the templates found in the repo
         for template_file in os.listdir(template_dir):
-            if template_file.startswith('.'):
+            if template_file.startswith('.') or 'README.md' in template_file:
                 continue
 
             logger.debug('processing file "{}"'.format(template_file))
-
             with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
+                # DNAC requires includes to include the absolute path, so we make this
+                # dependent on the project (i.e. {% include "__PROJECT__/foo" %} )
                 template_content = re.sub('__PROJECT__', self.template_project, template_content)
 
             template_name = template_file
-
             language = self.get_template_langauge(template_content)
-
             current_template = provisioned_templates.get(template_name)
             if not current_template:
                 # new template
@@ -284,15 +281,18 @@ class DNACTemplate(object):
 
         if result_json:
             logger.info('Writing results to {}'.format(result_json))
-            with open(result_json, 'w') as fd:
-                fd.write(json.dumps(results, indent=2) + '\n')
+            update_results_json(
+                filename=result_json,
+                message='DNAC template provisioning run',
+                stats=results)
 
         return results['errors'] == 0
 
     def parse_deployment_file(self, deployment_file):
         '''
         Parses a deployment file and returns the contents in a structure
-        with all device params expanded
+        with all device params expanded (i.e. global params applied to each
+        device params dict)
         '''
         logger.info('processing {}'.format(deployment_file))
         with open(deployment_file) as fd:
@@ -372,7 +372,6 @@ class DNACTemplate(object):
         '''
 
         deployment_results = {
-            'message': 'DNAC template deployment run from {} UTC'.format(datetime.utcnow()),
             'deployment_runs': 0,
             'devices_configured': 0,
             'deployment_failures': 0,
@@ -456,8 +455,10 @@ class DNACTemplate(object):
         if result_json and not preview:
             deployment_results['devices_configured'] = len(devices_configured)
             logger.info('Writing results to {}'.format(result_json))
-            with open(result_json, 'w') as fd:
-                fd.write(json.dumps(deployment_results, indent=2) + '\n')
+            update_results_json(
+                filename=result_json,
+                message='DNAC template deployment run',
+                stats=deployment_results)
 
         return deployment_results['deployment_failures'] == 0
 

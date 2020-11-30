@@ -45,7 +45,15 @@ class Notify(object):
                         results = json.load(fd)
                     message += '\n'
                     for k, v in results.items():
-                        message += '- {}: {}\n'.format(k, v)
+                        message += '- {}: '.format(k)
+                        print(k, v)
+                        if isinstance(v, dict):
+                            message += ', '.join(['{}: {}'.format(k1, v1) for k1, v1 in v.items()])
+                        elif isinstance(v, list):
+                            message += ', '.join([str(i) for i in v])
+                        else:
+                            message += str(v)
+                        message += '\n'
                 except Exception as e:
                     print('Exception ignored while processing results: {}'.format(str(e)))
                     pass

@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -34,6 +35,26 @@ def read_config(config_file):
 
     # expand env vars
     return AttrDict(replace_env_vars(attrs))
+
+
+def update_results_json(filename=None, message=None, stats={}):
+    '''
+    Update results.json file, creating if it does not exist
+    '''
+    if not filename:
+        return
+
+    try:
+        with open(filename, 'r') as fd:
+            results = json.loads(fd.read())
+    except FileNotFoundError:
+        results = {}
+
+    results[message] = stats
+
+    with open(filename, 'w') as fd:
+        fd.write(json.dumps(results, indent=2) + '\n')
+    return results
 
 
 if __name__ == '__main__':

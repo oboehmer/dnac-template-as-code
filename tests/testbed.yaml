@@ -22,7 +22,7 @@ devices:
       cli:
         protocol: ssh
         ip: 10.49.232.52
-        proxy: ssh-jumphost
+        # proxy: ssh-jumphost
 
   berlab-c9300-9:
     alias: berlab-c9300-9.berlab.de
@@ -43,7 +43,7 @@ devices:
       cli:
         protocol: ssh
         ip: 10.49.232.51
-        proxy: ssh-jumphost
+        # proxy: ssh-jumphost
 
   ssh-jumphost:
     type: server
