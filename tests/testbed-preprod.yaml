@@ -1,0 +1,25 @@
+# pyATS testbed file for pre-producton testing
+#
+devices:
+  berlab-c9300-1:
+    alias: berlab-c9300-1.berlab.de
+    type: router
+    os: ios
+    custom:
+      abstraction:
+        order: [os]
+      categories:
+      - ios
+    credentials:
+      default:
+        username: cisco
+        password: cisco
+      enable:
+        password: '%ENV{LAB_ENABLE_PW}'
+    connections:
+      defaults:
+        class: unicon.Unicon
+      cli:
+        protocol: ssh
+        # only reachable from within berlin lab
+        ip: 10.100.119.4

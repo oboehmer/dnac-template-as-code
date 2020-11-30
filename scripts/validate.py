@@ -5,7 +5,7 @@ import sys
 from jinja2 import Environment
 from DNACTemplate import DNACTemplate
 
-YAML_DIRS = ['deployment/']
+YAML_DIRS = ['deployment/', 'deployment-preprod/']
 TEMPLATE_DIRS = ['dnac-templates/']
 
 errors = []
