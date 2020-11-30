@@ -29,9 +29,9 @@ provision_templates:
   artifacts:
     when: always
     paths:
-      - results.json
+      - results-provision.json
   script:
-    - python scripts/provision_templates.py $ARG_CONFIG --template_dir dnac-templates/ --results results.json --debug
+    - python scripts/provision_templates.py $ARG_CONFIG --template_dir dnac-templates/ --results results-provision.json --debug
 
 # when in master, deploy templates on devices, otherwise just preview the output
 preview_templates:
@@ -56,22 +56,30 @@ deploy_templates:
   artifacts:
     when: always
     paths:
-      - results_deploy.json
+      - results-deploy.json
   script:
-    - python scripts/deploy_templates.py $ARG_CONFIG --deploy_dir deployment/ --results results_deploy.json --debug
+    - python scripts/deploy_templates.py $ARG_CONFIG --deploy_dir deployment/ --results results-deploy.json --debug
 
 test:
   image: ${RUNNER_IMAGE}
   stage: test
+  only:
+    refs:
+      - master
+      - result-json
   artifacts:
     when: always
     paths:
       - tests/out/*
       - tests/deploy/*
+      - results-tests.json
   script:
     - python scripts/render_tests.py --deploy_dir deployment/ --out_dir tests/deploy/ --debug
     # run all robot in this directory (recursively)
-    - cd tests ; robot --name 'DNAC Template Tests' --outputdir out/ --extension robot .
+    - cd tests
+    - robot --name 'DNAC Template Tests' --outputdir out/ --extension robot .
+  after_script:
+    - python scripts/parse_testresults.py tests/out/output.xml results-tests.json
 
 # last step in the pipeline to report status
 # we need multiple steps here as we want/need to differentiate between success
@@ -84,7 +92,8 @@ notify_success:
   when: on_success
   script:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
-    - python scripts/notify.py $ARG_CONFIG $ATTACH --results results.json --results results_deploy.json "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
+    - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
+    - python scripts/notify.py $ARG_CONFIG $ATTACH $RESULTS  "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
 
 notify_failure:
   image: ${RUNNER_IMAGE}
@@ -92,4 +101,5 @@ notify_failure:
   when: on_failure
   script:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
-    - python scripts/notify.py $ARG_CONFIG $ATTACH --results results.json --results results_deploy.json "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+    - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
+    - python scripts/notify.py $ARG_CONFIG $ATTACH $RESULTS "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
