@@ -25,6 +25,12 @@ validate:
 provision_templates:
   image: ${RUNNER_IMAGE}
   stage: provision
+  only:
+    changes:
+      - "dnac-templates/*"
+      - "deployment/*"
+      - "deployment-preprod/*"
+      - "scripts/*.py"
   artifacts:
     when: always
     paths:
@@ -35,6 +41,12 @@ provision_templates:
 preview_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
+  only:
+    changes:
+      - "dnac-templates/*"
+      - "deployment/*"
+      - "deployment-preprod/*"
+      - "scripts/*.py"
   artifacts:
     when: always
     paths:
@@ -46,10 +58,12 @@ preview_templates:
 deploy_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
-  # only:
-  #   changes:
-  #     - dnac-templates/*
-  #     - deployment/*
+  only:
+    changes:
+      - "dnac-templates/*"
+      - "deployment/*"
+      - "deployment-preprod/*"
+      - "scripts/*.py"
   artifacts:
     when: always
     paths:
@@ -60,6 +74,13 @@ deploy_templates:
 test:
   image: ${RUNNER_IMAGE}
   stage: test
+  only:
+    changes:
+      - "dnac-templates/*"
+      - "deployment/*"
+      - "deployment-preprod/*"
+      - "scripts/*.py"
+      - "tests/**/*"
   artifacts:
     when: always
     paths:
