@@ -27,6 +27,7 @@ provision_templates:
   stage: provision
   only:
     changes:
+      - ".gitlab-ci.yml"
       - "dnac-templates/*"
       - "deployment/*"
       - "deployment-preprod/*"
@@ -43,6 +44,7 @@ preview_templates:
   stage: deploy
   only:
     changes:
+      - ".gitlab-ci.yml"
       - "dnac-templates/*"
       - "deployment/*"
       - "deployment-preprod/*"
@@ -60,6 +62,7 @@ deploy_templates:
   stage: deploy
   only:
     changes:
+      - ".gitlab-ci.yml"
       - "dnac-templates/*"
       - "deployment/*"
       - "deployment-preprod/*"
@@ -76,6 +79,7 @@ test:
   stage: test
   only:
     changes:
+      - ".gitlab-ci.yml"
       - "dnac-templates/*"
       - "deployment/*"
       - "deployment-preprod/*"
@@ -87,11 +91,15 @@ test:
       - tests/out/*
       - tests/deploy/*
       - results-3-tests.json
+    reports:
+      # test results also shown in gitlab's test tab
+      junit: tests/out/output-junit.xml
   script:
-    - rm -rf tests/deploy ; python scripts/render_tests.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --out_dir tests/deploy/ $DEBUG
+    - rm -rf tests/deploy || true
+    - python scripts/render_tests.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --out_dir tests/deploy/ $DEBUG
     # run all robot in this directory (recursively)
     - cd tests
-    - robot --name 'DNAC Template Tests' --outputdir out/ --variable testbed:$TESTBED --extension robot .
+    - robot --name 'DNAC Template Tests' --outputdir out/ --xunit output-junit.xml --variable testbed:$TESTBED --extension robot .
   after_script:
     - python scripts/parse_testresults.py tests/out/output.xml results-3-tests.json
 
