@@ -462,6 +462,8 @@ class DNACTemplate(object):
                     logger.info('deployment status: {}'.format(results.status))
 
                     if results.status != 'SUCCESS':
+                        logger.error('Deployment error on device {}:\n{}'.format(
+                            target_info['id'], results.devices[0].detailedStatusMessage))
                         deployment_results['deployment_failures'] += 1
 
         if result_json and not preview:
