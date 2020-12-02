@@ -4,7 +4,7 @@ import logging
 import sys
 from DNACTemplate import DNACTemplate
 
-parser = argparse.ArgumentParser(description='Provision DNAC templates')
+parser = argparse.ArgumentParser(description='Provision templates on DNAC')
 parser.add_argument('--template_dir', required=True, help='template directory')
 parser.add_argument('--debug', action='store_true', help='print more debugging output')
 parser.add_argument('--config', help='config file to use')

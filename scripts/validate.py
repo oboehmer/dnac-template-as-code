@@ -1,18 +1,21 @@
 #!/usr/bin/env python
+#
+# Validate template files and YAML deployment files
+#
 import os
 import sys
 
 from jinja2 import Environment
 from DNACTemplate import DNACTemplate
 
-YAML_DIRS = ['deployment/', 'deployment-preprod/']
+DEPLOYMENT_DIRS = ['deployment/', 'deployment-preprod/']
 TEMPLATE_DIRS = ['dnac-templates/']
 
 errors = []
 
 dnac = DNACTemplate(connect=False)
 
-for d in YAML_DIRS:
+for d in DEPLOYMENT_DIRS:
     for f in os.listdir(d):
         if f.startswith('.') or not (f.endswith('.yaml') or f.endswith('.yml')):
             continue

@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+#
+# Use DNAC to deploy templates on devices
+#
 import argparse
 import logging
 import sys

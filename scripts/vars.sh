@@ -1,5 +1,5 @@
 #!/bin/sh
-
+#
 # setup vars for cicd pipeline
 
 TEMPLATE_DIR="dnac-templates/"

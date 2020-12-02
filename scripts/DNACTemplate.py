@@ -187,8 +187,6 @@ class DNACTemplate(object):
         provisioned_templates = self.retrieve_provisioned_templates()
         if len(provisioned_templates) > 0:
             logger.debug('provisioned templates: {}'.format(', '.join(provisioned_templates.keys())))
-            # for t in provisioned_templates.values():
-            #     logger.debug(t)
         else:
             logger.debug('no templates provisioned.')
 
@@ -245,7 +243,6 @@ class DNACTemplate(object):
                     results['skipped'] += 1
                     continue
 
-                logger.info('Updating template "{}"'.format(template_name))
                 params = {
                     'id': current_template.id,
                     'projectId': self.template_project_id,
@@ -257,6 +254,7 @@ class DNACTemplate(object):
                     'templateParams': self.get_template_params(template_content, language, template_dir),
                     'templateContent': template_content
                 }
+                logger.info('Updating template "{}"'.format(template_name))
                 logger.debug(params)
                 try:
                     response = self.dnac.configuration_templates.update_template(current_template.id, **params)
@@ -353,7 +351,7 @@ class DNACTemplate(object):
                 params = [global_params]
             result['devices'][device]['params'] = params
 
-        logger.debug('result: {}'.format(result))
+        logger.debug('parse_deployment_file() returns: {}'.format(result))
         return AttrDict(result)
 
     def _log_preview(self, msg, fd=None):
@@ -426,6 +424,8 @@ class DNACTemplate(object):
                 else:
                     logger.info('Deploying {} using params {} on device {}'.format(
                         dep_info.template_name, target_info['params'], target_info['id']))
+                    logger.debug('Target Info: {}'.format(target_info))
+
                     deployment_results['deployment_runs'] += 1
                     devices_configured[target_info['id']] = 1
 
@@ -453,7 +453,7 @@ class DNACTemplate(object):
                         time.sleep(2)
                         results = self.dnac.configuration_templates.get_template_deployment_status(
                             deployment_id=deployment_id)
-                        logger.debug('deployment status: {}'.format(results))
+                        # logger.debug('deployment status: {}'.format(results))
                         if results.status == 'IN_PROGRESS':
                             i += 1
                             continue

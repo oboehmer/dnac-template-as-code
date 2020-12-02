@@ -4,7 +4,7 @@ import logging
 import sys
 from DNACTemplate import DNACTemplate
 
-parser = argparse.ArgumentParser(description='Deploy DNAC templates')
+parser = argparse.ArgumentParser(description='Preview DNAC templates rendering result')
 parser.add_argument('--deploy_dir', required=True, help='directory or single file with yaml deployment config')
 parser.add_argument('--outfile', help='write preview result to this file')
 parser.add_argument('--debug', action='store_true', help='print more debugging output')
