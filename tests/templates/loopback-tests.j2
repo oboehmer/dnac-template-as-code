@@ -1,0 +1,12 @@
+{% include "common_header.j2" %}
+
+{% for device in devices %}
+
+test for Loopback {{ device.params.id }} on device {{ device.name }}
+    connect to device "{{ device.name }}"
+    ${result}=  parse "show interfaces" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    Should be Equal   ${result}[Loopback{{ device.params.id }}][line_protocol]   up
+    Dictionary Should Contain Key    ${result}[Loopback{{ device.params.id }}][ipv4]   {{ device.params.ipv4 }}/32
+
+{% endfor %}
