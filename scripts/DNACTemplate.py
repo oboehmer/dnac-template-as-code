@@ -293,7 +293,7 @@ class DNACTemplate(object):
             logger.info('Writing results to {}'.format(result_json))
             update_results_json(
                 filename=result_json,
-                message='DNAC template provisioning run',
+                message='Template provisioning run',
                 stats=results)
 
         return results['errors'] == 0
@@ -471,7 +471,7 @@ class DNACTemplate(object):
             logger.info('Writing results to {}'.format(result_json))
             update_results_json(
                 filename=result_json,
-                message='DNAC template deployment run',
+                message='Template deployment run',
                 stats=deployment_results)
 
         return deployment_results['deployment_failures'] == 0

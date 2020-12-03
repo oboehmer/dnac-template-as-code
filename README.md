@@ -1,6 +1,6 @@
-# DNAC Template Maintenance and Deployment via a CICD pipeline
+# Cisco DNA-Center Template Maintenance and Deployment via a CICD pipeline
 
-This repository contains a simple approch to maintain a DNA-Center template project and deploy templates on DNAC-managed devices, all using a CICD pipeline.
+This repository contains a simple approch to maintain a Cisco DNA-Center (DNAC) template project and deploy templates on DNAC-managed devices, all using a CICD pipeline.
 
 ## Requirements & Caveats
 

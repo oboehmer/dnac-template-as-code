@@ -1,6 +1,6 @@
 # Deployment Directory
 
-The YAML files in this directory control the deployment of a DNAC template on one or more devices.
+The YAML files in this directory control the deployment of a Cisco DNAC template on one or more devices.
 
 The files have the following structure (check the commented example below):
 
