@@ -93,6 +93,10 @@ class Notify(object):
             else:
                 recepients.append({'toPersonId': p})
 
+        if len(recepients) == 0:
+            print('No recepients found or specified')
+            return
+
         if not attach:
             attach = []
 
