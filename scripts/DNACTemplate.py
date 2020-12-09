@@ -453,8 +453,8 @@ class DNACTemplate(object):
                         time.sleep(2)
                         results = self.dnac.configuration_templates.get_template_deployment_status(
                             deployment_id=deployment_id)
-                        # logger.debug('deployment status: {}'.format(results))
-                        if results.status == 'IN_PROGRESS':
+                        logger.debug('deployment status: {}'.format(results))
+                        if results.status in ('IN_PROGRESS', 'INIT'):
                             i += 1
                             continue
                         else:
