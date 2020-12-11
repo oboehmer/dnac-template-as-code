@@ -1,4 +1,4 @@
-no interface Loopback{{ id }}
+default interface Loopback{{ id }}
 interface Loopback{{ id }}
  description {{ descr }}
  ip address {{ ipv4 }} 255.255.255.255

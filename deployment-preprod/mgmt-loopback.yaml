@@ -2,7 +2,7 @@ template_name: mgmt-loopback
 test_template: loopback-tests.j2
 
 params:
-  id: 97
+  id: 99
   descr: Management loopback
 
 devices:
