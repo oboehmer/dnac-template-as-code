@@ -1,0 +1,6 @@
+interface Loopback{{ id }}
+ description {{ descr }}
+ ip address {{ ipv4 }} 255.255.255.255
+{% if ipv6 | length %}
+ ipv6 address {{ ipv6 }}/128
+{% endif %}
