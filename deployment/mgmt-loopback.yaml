@@ -13,4 +13,3 @@ devices:
   berlab-c9300-9.berlab.de:
     params:
       ipv4: 172.31.1.9
-      ipv6: fd00:c1cd:2::9
