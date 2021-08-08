@@ -1,5 +1,4 @@
 __pycache__/
 results*.json
-*.txt
 .vscode/
 demo/
