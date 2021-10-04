@@ -8,4 +8,4 @@ params:
   SNMP_ACL: SNMP
 
 devices:
-  berlab-c9300-1.berlab.de:
+  berlab-c9300-9:

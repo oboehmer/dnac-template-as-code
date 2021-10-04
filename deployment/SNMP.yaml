@@ -8,8 +8,8 @@ params:
   SNMP_ACL: SNMP
 
 devices:
-  berlab-c9300-3:
-  berlab-c9300-9.berlab.de:
+  # berlab-c9300-4.berlab.de:
+  berlab-c9300-4.berlab.de:
     # for demo, we use different communities for this device, and also apply two different ones
     params:
       - SNMP_RO_COMMUNITY: foo1

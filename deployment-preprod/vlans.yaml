@@ -7,9 +7,12 @@ test_template: vlan-svi-tests.j2
 # each time with a discrete params set.
 # The same holds true for the test creation where test templates are
 # rendered for each device/param set
+params:
+  mask: ignore      # required parameter
+  cidr: ignore      # 
 
 devices:
-  berlab-c9300-1.berlab.de:
+  berlab-c9300-9:
     params:
       - id: 500
         name: Test_500

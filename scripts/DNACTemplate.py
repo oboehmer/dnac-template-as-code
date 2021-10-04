@@ -354,8 +354,8 @@ class DNACTemplate(object):
         logger.debug('parse_deployment_file() returns: {}'.format(result))
         return AttrDict(result)
 
-    def _log_preview(self, msg, fd=None):
-        logger.info(msg)
+    def _log_preview(self, msg, fd=None, facility='info'):
+        getattr(logger, facility)(msg)
         if fd:
             fd.write(msg + '\n')
 
@@ -406,7 +406,7 @@ class DNACTemplate(object):
             all_targets = []
             for device, items in dep_info.devices.items():
                 for p in items['params']:
-                    all_targets.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": p})
+                    all_targets.append({'id': device, 'type': 'MANAGED_DEVICE_HOSTNAME', 'scope': 'RUNTIME', 'params': p})
             logger.debug('Target Info collected: {}'.format(all_targets))
 
             devices_configured = {}
@@ -419,7 +419,14 @@ class DNACTemplate(object):
                         preview_fd)
                     results = self.dnac.configuration_templates.preview_template(
                         templateId=template_id, params=target_info['params'])
-                    self._log_preview('\n{}\n'.format(results.cliPreview), preview_fd)
+                    if results.cliPreview is None:
+                        errors = getattr(results, 'validationErrors', [])
+                        msg = ''
+                        for e in errors:
+                            msg += ':'.join(str(i) for i in e.values()) + "\n  "
+                        self._log_preview('\nERROR: {}\n'.format(msg), preview_fd, facility='error')
+                    else:
+                        self._log_preview('\n{}\n'.format(results.cliPreview), preview_fd)
 
                 else:
                     logger.info('Deploying {} using params {} on device {}'.format(

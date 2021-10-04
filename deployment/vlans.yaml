@@ -9,7 +9,7 @@ test_template: vlan-svi-tests.j2
 # rendered for each device/param set
 
 devices:
-  berlab-c9300-3:
+  berlab-c9300-4.berlab.de:
     params:
       - id: 500
         name: Test_500
@@ -21,11 +21,11 @@ devices:
         name: Test_502
         ip: 192.168.6.1/24
 
-  berlab-c9300-9.berlab.de:
-    params:
-      - id: 500
-        name: Test_500
-        ip: 192.168.3.2/24
-      - id: 502
-        name: Test_502
-        ip: 192.168.6.1/24
+  # berlab-c9300-5.berlab.de:
+  #   params:
+  #     - id: 500
+  #       name: Test_500
+  #       ip: 192.168.3.2/24
+  #     - id: 502
+  #       name: Test_502
+  #       ip: 192.168.6.1/24
