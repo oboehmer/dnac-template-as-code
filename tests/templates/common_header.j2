@@ -11,8 +11,7 @@ ${testbed}       ./testbed.yaml
 
 *** Keywords ***
 setup
-    # '[ WARN ] Could not load the Datafile correctly' can be ignored
-    use genie testbed "${testbed}"
+    use testbed "${testbed}"
 
 *** Test Cases ***
 

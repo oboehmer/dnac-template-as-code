@@ -22,6 +22,7 @@ devices:
       cli:
         protocol: ssh
         ip: 198.19.10.11
+        ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
 
   CSR-2:
     type: router
@@ -41,6 +42,7 @@ devices:
       cli:
         protocol: ssh
         ip: 198.19.10.12
+        ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
 
   ssh-jumphost:
     type: server
