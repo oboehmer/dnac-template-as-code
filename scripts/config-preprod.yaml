@@ -5,14 +5,14 @@
 #   password: '%ENV(DNAC_PASSWORD)'
 #
 dnac:
-  base_url: https://10.49.232.103
-  version: 2.2.2.3
-  username: CLEUR21
+  base_url: https://198.18.129.100
+  version: 2.2.3.3
+  username: cicd
   password: '%ENV{DNAC_PASSWORD}'
   verify: False
 
 # DNAC project we maintain
-template_project: CICD-CLEUR21-test
+template_project: CICD-staging
 
 notify:
   # specify room_id and/or WebexTeams person email

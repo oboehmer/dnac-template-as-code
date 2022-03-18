@@ -4,7 +4,7 @@
 # inventory as an exercise to the reader
 
 devices:
-  berlab-c9300-3:
+  CSR-1:
     type: router
     os: ios
     custom:
@@ -14,18 +14,16 @@ devices:
       - ios
     credentials:
       default:
-        username: cisco
-        password: cisco
+        username: '%ENV{DEVICES_USERNAME}'
+        password: '%ENV{DEVICES_PASSWORD}'
     connections:
       defaults:
         class: unicon.Unicon
       cli:
         protocol: ssh
-        ip: 10.49.232.52
-        # proxy: ssh-jumphost
+        ip: 198.19.10.11
 
-  berlab-c9300-9:
-    alias: berlab-c9300-9.berlab.de
+  CSR-2:
     type: router
     os: ios
     custom:
@@ -35,15 +33,14 @@ devices:
       - ios
     credentials:
       default:
-        username: cisco
-        password: cisco
+        username: '%ENV{DEVICES_USERNAME}'
+        password: '%ENV{DEVICES_PASSWORD}'
     connections:
       defaults:
         class: unicon.Unicon
       cli:
         protocol: ssh
-        ip: 10.49.232.51
-        # proxy: ssh-jumphost
+        ip: 198.19.10.12
 
   ssh-jumphost:
     type: server
