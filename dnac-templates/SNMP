@@ -1,2 +1,0 @@
-snmp-server community {{ SNMP_RO_COMMUNITY }} ro {{ SNMP_ACL }}
-snmp-server community {{ SNMP_RW_COMMUNITY }} rw {{ SNMP_ACL }}
