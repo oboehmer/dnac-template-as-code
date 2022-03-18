@@ -406,7 +406,9 @@ class DNACTemplate(object):
             all_targets = []
             for device, items in dep_info.devices.items():
                 for p in items['params']:
-                    all_targets.append({'id': device, 'type': 'MANAGED_DEVICE_HOSTNAME', 'scope': 'RUNTIME', 'params': p})
+                    d = {'id': device, 'type': 'MANAGED_DEVICE_HOSTNAME', 'params': p}
+                    # d.update({'scope': 'RUNTIME'})        # earlier versions than 2.2.3.3 needed this
+                    all_targets.append(d)
             logger.debug('Target Info collected: {}'.format(all_targets))
 
             devices_configured = {}
