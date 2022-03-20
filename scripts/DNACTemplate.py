@@ -69,12 +69,12 @@ class DNACTemplate(object):
                 return p.id
 
         task = self.dnac.configuration_templates.create_project(name=project)
-        project_id = self.wait_and_check_status(task)
+        (project_id, data) = self.wait_and_check_status(task)
         if project_id:
             logger.info('Created project "{}"'.format(project))
             return project_id
         else:
-            raise Exception('Creation of project "{}" failed'.format(project))
+            raise Exception('Creation of project "{}" failed: {}'.format(project, data))
 
     def retrieve_provisioned_templates(self, template_name=None):
         '''
@@ -84,7 +84,8 @@ class DNACTemplate(object):
         logger.debug('Retrieving existing templates')
         result = {}
         for t in self.dnac.configuration_templates.gets_the_templates_available(
-                project_id=self.template_project_id):
+                project_id=self.template_project_id,
+                filter_conflicting_templates=True):
             # store both template and template details, joining both in the same dict
             result[t.name] = t
             result[t.name].update(self.dnac.configuration_templates.get_template_details(t.templateId))
@@ -137,20 +138,27 @@ class DNACTemplate(object):
         poll status of task (i.e. template creation or update), and return
         response.data
         '''
+        def _is_scalar(val):
+            return type(val) not in (list, tuple, dict)
+
         attempt = 0
         result = None
         while attempt < max_attempts:
             time.sleep(sleeptime)
             status = self.dnac.task.get_task_by_id(response['response']['taskId'])
-            if status.response.isError is False:
+            logger.debug('Check task {task}, attempt {attempt}, response: {response}'.format(
+                task=response['response']['taskId'],
+                attempt=attempt,
+                response=status.response
+            ))
+            # check for response as well as data type of data, which is a scalar
+            if status.response.isError and _is_scalar(status.response.data):
                 result = status.response.data
                 break
             attempt += 1
             logger.debug('waiting, response was {}'.format(status.response))
 
-        if not result:
-            raise Exception()
-        return result
+        return (result, status.response.data)
 
     def get_template_langauge(self, content):
         '''
@@ -266,9 +274,9 @@ class DNACTemplate(object):
                     results['updated'] += 1
 
             # check task and retrieve the template_id
-            template_id = self.wait_and_check_status(response)
+            (template_id, data) = self.wait_and_check_status(response)
             if not template_id:
-                raise Exception('Creation of template "{}" failed'.format(template_name))
+                raise Exception('Creation of template "{}" failed: {}'.format(template_name, data))
 
             # Commit the template
             response = self.dnac.configuration_templates.version_template(
@@ -284,7 +292,11 @@ class DNACTemplate(object):
             if k not in pushed_templates:
                 if purge is True:
                     logger.info('deleting template "{}"'.format(k))
-                    self.dnac.configuration_templates.delete_template(v.id)
+                    try:
+                        self.dnac.configuration_templates.deletes_the_template(v.id)
+                    except AttributeError:
+                        self.dnac.configuration_templates.delete_template(v.id)
+
                     results['deleted'] += 1
                 else:
                     logger.info('Not attempting to purge template "{}"'.format(k))
