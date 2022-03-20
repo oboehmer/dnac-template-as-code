@@ -9,6 +9,16 @@ router ospf 1
  router-id {{ ipv4_loopback }} 
  passive interface Loopback0
 !
+ipv6 router ospf 1
+ router-id {{ ipv4_loopback }}
+{% if ipv6_loopback | length %}
+ passive interface Loopback0
+{% endif %}
+!
 {% for interface in ospf_interfaces %}
 interface {{ interface.name }}
  ip ospf 1 area {{ interface.area }}
+ {% if defined interface.ipv6_enabled %}
+ ipv6 ospf 1 area {{ interface.area }}
+ {% endif %}
+{% endfor %}
