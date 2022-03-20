@@ -1,0 +1,14 @@
+template_name: ospf
+# test_template: loopback-tests.j2
+
+params:
+ int_description: Routing loopback
+
+devices:
+  CSR-5:
+    params:
+      ipv4_loopback: 172.0.0.5
+      ipv6_loopback: fd00:c1cd:1:::1
+      ospf_interfaces:
+        - name: GigabitEthernet1
+          area: 0

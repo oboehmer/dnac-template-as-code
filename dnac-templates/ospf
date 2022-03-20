@@ -1,0 +1,14 @@
+interface Loopback0
+ description {{ int_description }}
+ ip address {{ ipv4_loopback }} 255.255.255.255
+{% if ipv6_loopback | length %}
+ ipv6 address {{ ipv6_loopback }}/128
+{% endif %}
+!
+router ospf 1
+ router-id {{ ipv4_loopback }} 
+ passive interface Loopback0
+!
+{% for interface in ospf_interfaces %}
+interface {{ interface.name }}
+ ip ospf 1 area {{ interface.area }}
