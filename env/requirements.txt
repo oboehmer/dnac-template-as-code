@@ -5,7 +5,7 @@ dnacentersdk==2.4.6
 webexteamssdk==1.6
 attrdict==2.0.1
 PyYAML==5.3.1
-Jinja2==2.11.2
+Jinja2==3.0.3
 pyats>=22.2,<22.3
 pyats.robot>=22.2,<22.3
 unicon>=22.2,<22.3
