@@ -1,0 +1,27 @@
+*** Settings ***
+Library       pyats.robot.pyATSRobot
+Library       unicon.robot.UniconRobot
+Library       genie.libs.robot.GenieRobot
+Library       Collections
+
+Suite Setup   setup
+
+*** Variables ***
+${testbed}       ./testbed.yaml
+
+*** Test Cases ***
+
+{% for device in devices %}
+Check OSPF interface state on device {{ device }}
+    ${result}=  parse "show ip ospf neighbor detail" on device "{{ device.name }}"
+    ${interfaces}=  dq query  data=${result}  filters=get_values('interfaces')
+    Log   ${interfaces}
+{% endfor %}
+
+
+*** Keywords ***
+setup
+    use testbed "${testbed}"
+{% for device in devices %}
+    connect to device "{{ device }}"
+{% endfor %}

@@ -1,5 +1,5 @@
 template_name: ospf
-# test_template: loopback-tests.j2
+test_template: ospf-tests.j2
 
 params:
  int_description: Routing loopback

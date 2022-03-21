@@ -23,6 +23,7 @@ devices:
         protocol: ssh
         ip: 198.19.10.15
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
+        proxy: ssh-jumphost
 
   CSR-6:
     type: router
@@ -43,6 +44,7 @@ devices:
         protocol: ssh
         ip: 198.19.10.16
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
+        proxy: ssh-jumphost
 
   ssh-jumphost:
     type: server
@@ -56,4 +58,4 @@ devices:
         class: unicon.Unicon
       cli:
         protocol: ssh
-        ip: 10.0.5.213
+        ip: 198.18.133.198
