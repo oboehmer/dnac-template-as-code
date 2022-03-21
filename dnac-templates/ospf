@@ -1,4 +1,3 @@
-ipv6 cef
 ipv6 unicast-routing
 
 interface Loopback0
