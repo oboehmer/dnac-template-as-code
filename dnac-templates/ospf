@@ -1,3 +1,6 @@
+ipv6 cef
+ipv6 unicast-routing
+
 interface Loopback0
  description {{ int_description }}
  ip address {{ ipv4_loopback }} 255.255.255.255
