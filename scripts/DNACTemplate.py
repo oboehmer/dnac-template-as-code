@@ -151,8 +151,8 @@ class DNACTemplate(object):
                 attempt=attempt,
                 response=status.response
             ))
-            # check for response as well as data type of data, which is a scalar
-            if status.response.isError and _is_scalar(status.response.data):
+            # check for response as well as data type of data, which should be a scalar on success - sic
+            if status.response.isError is False and _is_scalar(status.response.data):
                 result = status.response.data
                 break
             attempt += 1
