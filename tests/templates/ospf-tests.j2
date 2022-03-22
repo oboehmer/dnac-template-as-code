@@ -12,7 +12,7 @@ ${testbed}       ./testbed.yaml
 *** Test Cases ***
 
 {% for device in devices %}
-Check OSPF interface state on device {{ device }}
+Check OSPF interface state on device {{ device.name }}
     ${result}=  parse "show ip ospf neighbor detail" on device "{{ device.name }}"
     ${interfaces}=  dq query  data=${result}  filters=get_values('interfaces')
     Log   ${interfaces}
@@ -23,5 +23,5 @@ Check OSPF interface state on device {{ device }}
 setup
     use testbed "${testbed}"
 {% for device in devices %}
-    connect to device "{{ device }}"
+    connect to device "{{ device.name }}"
 {% endfor %}
