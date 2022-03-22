@@ -18,7 +18,7 @@ Check OSPF interface state on device {{ device.name }}
     Log Dictionary   ${result}
     ${interfaces}=  dq query  data=${result}  filters=get_values('interfaces')
     Log   ${interfaces}
-    ${s}=   Evaluate  print({{ device }})
+    ${s}=   Evaluate  {{ device.ospf_interfaces }}
     Log  ${s}
     {% for ospf_int in device.ospf_interfaces %}
     List Should Contain Value   ${interfaces}   {{ ospf_int.name }}   msg=OSPF interface {{ ospf_int.name }} has no neighbors
