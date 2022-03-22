@@ -4,6 +4,7 @@
 
 
 devices:
-  berlab-c9300-3:
-  berlab-c9300-9.berlab.de:
-
+  CSR-1:
+  CSR-2:
+  CSR-3:
+  CSR-4:

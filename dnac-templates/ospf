@@ -1,0 +1,28 @@
+ipv6 unicast-routing
+
+interface Loopback0
+ description {{ int_description }}
+ ip address {{ ipv4_loopback }} 255.255.255.255
+ ip ospf 1 area {{ loopback_area }}
+{% if ipv6_loopback | length %}
+ ipv6 address {{ ipv6_loopback }}/128
+ ipv6 ospf 1 area {{ loopback_area }}
+{% endif %}
+!
+router ospf 1
+ router-id {{ ipv4_loopback }} 
+ passive-interface Loopback0
+!
+ipv6 router ospf 1
+ router-id {{ ipv4_loopback }}
+{% if ipv6_loopback | length %}
+ passive-interface Loopback0
+{% endif %}
+!
+{% for interface in ospf_interfaces %}
+interface {{ interface.name }}
+ ip ospf 1 area {{ interface.area }}
+ {% if interface.ipv6_enabled | length %}
+ ipv6 ospf 1 area {{ interface.area }}
+ {% endif %}
+{% endfor %}

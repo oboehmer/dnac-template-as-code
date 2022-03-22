@@ -2,3 +2,6 @@ __pycache__/
 results*.json
 .vscode/
 demo/
+venv/
+.env
+template-preview.txt

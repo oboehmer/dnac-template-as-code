@@ -46,6 +46,8 @@ class DNACTemplate(object):
             return
 
         # login to DNAC
+        if self.config.dnac.version != '2.2.3.3':
+            logger.warn('This class has been tested with DNAC 2.2.3.3, please expect some issues with earlier releases')
         try:
             self.dnac = api.DNACenterAPI(**self.config.dnac)
         except ApiError:
@@ -69,12 +71,12 @@ class DNACTemplate(object):
                 return p.id
 
         task = self.dnac.configuration_templates.create_project(name=project)
-        project_id = self.wait_and_check_status(task)
+        (project_id, data) = self.wait_and_check_status(task)
         if project_id:
             logger.info('Created project "{}"'.format(project))
             return project_id
         else:
-            raise Exception('Creation of project "{}" failed'.format(project))
+            raise Exception('Creation of project "{}" failed: {}'.format(project, data))
 
     def retrieve_provisioned_templates(self, template_name=None):
         '''
@@ -84,7 +86,8 @@ class DNACTemplate(object):
         logger.debug('Retrieving existing templates')
         result = {}
         for t in self.dnac.configuration_templates.gets_the_templates_available(
-                project_id=self.template_project_id):
+                project_id=self.template_project_id,
+                filter_conflicting_templates=True):
             # store both template and template details, joining both in the same dict
             result[t.name] = t
             result[t.name].update(self.dnac.configuration_templates.get_template_details(t.templateId))
@@ -137,20 +140,27 @@ class DNACTemplate(object):
         poll status of task (i.e. template creation or update), and return
         response.data
         '''
+        def _is_scalar(val):
+            return type(val) not in (list, tuple, dict)
+
         attempt = 0
         result = None
         while attempt < max_attempts:
             time.sleep(sleeptime)
             status = self.dnac.task.get_task_by_id(response['response']['taskId'])
-            if status.response.isError is False:
+            logger.debug('Check task {task}, attempt {attempt}, response: {response}'.format(
+                task=response['response']['taskId'],
+                attempt=attempt,
+                response=status.response
+            ))
+            # check for response as well as data type of data, which should be a scalar on success - sic
+            if status.response.isError is False and _is_scalar(status.response.data):
                 result = status.response.data
                 break
             attempt += 1
             logger.debug('waiting, response was {}'.format(status.response))
 
-        if not result:
-            raise Exception()
-        return result
+        return (result, status.response.data)
 
     def get_template_langauge(self, content):
         '''
@@ -266,9 +276,9 @@ class DNACTemplate(object):
                     results['updated'] += 1
 
             # check task and retrieve the template_id
-            template_id = self.wait_and_check_status(response)
+            (template_id, data) = self.wait_and_check_status(response)
             if not template_id:
-                raise Exception('Creation of template "{}" failed'.format(template_name))
+                raise Exception('Creation of template "{}" failed: {}'.format(template_name, data))
 
             # Commit the template
             response = self.dnac.configuration_templates.version_template(
@@ -284,7 +294,11 @@ class DNACTemplate(object):
             if k not in pushed_templates:
                 if purge is True:
                     logger.info('deleting template "{}"'.format(k))
-                    self.dnac.configuration_templates.delete_template(v.id)
+                    try:
+                        self.dnac.configuration_templates.deletes_the_template(v.id)
+                    except AttributeError:
+                        self.dnac.configuration_templates.delete_template(v.id)
+
                     results['deleted'] += 1
                 else:
                     logger.info('Not attempting to purge template "{}"'.format(k))
@@ -354,8 +368,8 @@ class DNACTemplate(object):
         logger.debug('parse_deployment_file() returns: {}'.format(result))
         return AttrDict(result)
 
-    def _log_preview(self, msg, fd=None):
-        logger.info(msg)
+    def _log_preview(self, msg, fd=None, facility='info'):
+        getattr(logger, facility)(msg)
         if fd:
             fd.write(msg + '\n')
 
@@ -406,7 +420,9 @@ class DNACTemplate(object):
             all_targets = []
             for device, items in dep_info.devices.items():
                 for p in items['params']:
-                    all_targets.append({'id': device, 'type': "MANAGED_DEVICE_HOSTNAME", "params": p})
+                    d = {'id': device, 'type': 'MANAGED_DEVICE_HOSTNAME', 'params': p}
+                    # d.update({'scope': 'RUNTIME'})        # earlier versions than 2.2.3.3 needed this
+                    all_targets.append(d)
             logger.debug('Target Info collected: {}'.format(all_targets))
 
             devices_configured = {}
@@ -419,7 +435,14 @@ class DNACTemplate(object):
                         preview_fd)
                     results = self.dnac.configuration_templates.preview_template(
                         templateId=template_id, params=target_info['params'])
-                    self._log_preview('\n{}\n'.format(results.cliPreview), preview_fd)
+                    if results.cliPreview is None:
+                        errors = getattr(results, 'validationErrors', [])
+                        msg = ''
+                        for e in errors:
+                            msg += ':'.join(str(i) for i in e.values()) + "\n  "
+                        self._log_preview('\nERROR: {}\n'.format(msg), preview_fd, facility='error')
+                    else:
+                        self._log_preview('\n{}\n'.format(results.cliPreview), preview_fd)
 
                 else:
                     logger.info('Deploying {} using params {} on device {}'.format(

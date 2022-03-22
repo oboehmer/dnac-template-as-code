@@ -25,13 +25,13 @@ validate:
 provision_templates:
   image: ${RUNNER_IMAGE}
   stage: provision
-  only:
-    changes:
-      - ".gitlab-ci.yml"
-      - "dnac-templates/*"
-      - "deployment/*"
-      - "deployment-preprod/*"
-      - "scripts/*.py"
+  # only:
+  #   changes:
+  #     - ".gitlab-ci.yml"
+  #     - "dnac-templates/*"
+  #     - "deployment/*"
+  #     - "deployment-preprod/*"
+  #     - "scripts/*.py"
   artifacts:
     when: always
     paths:
@@ -42,13 +42,13 @@ provision_templates:
 preview_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
-  only:
-    changes:
-      - ".gitlab-ci.yml"
-      - "dnac-templates/*"
-      - "deployment/*"
-      - "deployment-preprod/*"
-      - "scripts/*.py"
+  # only:
+  #   changes:
+  #     - ".gitlab-ci.yml"
+  #     - "dnac-templates/*"
+  #     - "deployment/*"
+  #     - "deployment-preprod/*"
+  #     - "scripts/*.py"
   artifacts:
     when: always
     paths:
@@ -60,13 +60,13 @@ preview_templates:
 deploy_templates:
   image: ${RUNNER_IMAGE}
   stage: deploy
-  only:
-    changes:
-      - ".gitlab-ci.yml"
-      - "dnac-templates/*"
-      - "deployment/*"
-      - "deployment-preprod/*"
-      - "scripts/*.py"
+  # only:
+  #   changes:
+  #     - ".gitlab-ci.yml"
+  #     - "dnac-templates/*"
+  #     - "deployment/*"
+  #     - "deployment-preprod/*"
+  #     - "scripts/*.py"
   artifacts:
     when: always
     paths:
@@ -77,14 +77,14 @@ deploy_templates:
 test:
   image: ${RUNNER_IMAGE}
   stage: test
-  only:
-    changes:
-      - ".gitlab-ci.yml"
-      - "dnac-templates/*"
-      - "deployment/*"
-      - "deployment-preprod/*"
-      - "scripts/*.py"
-      - "tests/**/*"
+  # only:
+  #   changes:
+  #     - ".gitlab-ci.yml"
+  #     - "dnac-templates/*"
+  #     - "deployment/*"
+  #     - "deployment-preprod/*"
+  #     - "scripts/*.py"
+  #     - "tests/**/*"
   artifacts:
     when: always
     paths:

@@ -6,7 +6,7 @@ params:
   descr: Management loopback
 
 devices:
-  berlab-c9300-1.berlab.de:
+  CSR-5:
     params:
-      ipv4: 172.16.99.1
-      ipv6: fd00:c1cd::1
+      ipv4: 172.31.99.5
+      ipv6: fd00:c1cd:1:99::5

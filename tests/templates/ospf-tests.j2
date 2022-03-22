@@ -1,0 +1,43 @@
+*** Settings ***
+Library       pyats.robot.pyATSRobot
+Library       unicon.robot.UniconRobot
+Library       genie.libs.robot.GenieRobot
+Library       Collections
+
+Suite Setup   setup
+
+*** Variables ***
+${testbed}       ./testbed.yaml
+
+*** Test Cases ***
+
+{% for device in devices %}
+Check OSPF interface state on device {{ device.name }}
+    [Tags]  robot:continue-on-failure         # ensure test case runs through all interfaces
+    ${result}=  parse "show ip ospf neighbor detail" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    ${interfaces}=  dq query  data=${result}  filters=get_values('interfaces')
+    Log   ${interfaces}
+    {% for ospf_int in device.params.ospf_interfaces %}
+    List Should Contain Value   ${interfaces}   {{ ospf_int.name }}   msg=OSPF interface {{ ospf_int.name }} has no neighbors
+    {% endfor %}
+
+Check loopback routes on device {{ device.name }}
+    [Tags]  robot:continue-on-failure         # ensure test case runs through all routes
+    @{loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
+    FOR  ${r}   IN   @{loopbacks}
+        ${result}=  parse "show ip route ${r}" on device "{{ device.name }}"
+        Log    ${result}
+        ${check}=    dq query  data=${result}  filters=contains('${r}/32')
+        Log    ${check}
+        Should be True  len($check) > 0    msg=did not find ${r}/32 in routing table
+    END
+{% endfor %}
+
+
+*** Keywords ***
+setup
+    use testbed "${testbed}"
+{% for device in devices %}
+    connect to device "{{ device.name }}"
+{% endfor %}
