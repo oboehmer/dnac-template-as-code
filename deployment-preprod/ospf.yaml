@@ -17,3 +17,15 @@ devices:
       ospf_interfaces:
         - name: GigabitEthernet2
           area: 0
+  CSR-7:
+    params:
+      ipv4_loopback: 172.0.0.7
+      ospf_interfaces:
+        - name: GigabitEthernet2
+          area: 0
+  CSR-8:
+    params:
+      ipv4_loopback: 172.0.0.8
+      ospf_interfaces:
+        - name: GigabitEthernet2
+          area: 0
