@@ -3,6 +3,7 @@ test_template: ospf-tests.j2
 
 params:
  int_description: Routing loopback
+ loopback_area: 0
 
 devices:
   CSR-5:
