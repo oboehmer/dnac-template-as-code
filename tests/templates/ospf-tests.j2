@@ -24,7 +24,7 @@ Check OSPF interface state on device {{ device.name }}
 
 Check loopback routes on device {{ device.name }}
     [Tags]  robot:continue-on-failure         # ensure test case runs through all routes
-    @{loopbacks}=   Create List   1.1.1.1   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
+    @{loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
     FOR  ${r}   IN   @{loopbacks}
         ${result}=  parse "show ip route ${r}" on device "{{ device.name }}"
         Log    ${result}
