@@ -4,6 +4,7 @@ Library       unicon.robot.UniconRobot
 Library       genie.libs.robot.GenieRobot
 Library       Collections
 
+Force Tags    robot:continue-on-failure         # ensure test cases continue on failure
 Suite Setup   setup
 
 *** Variables ***
@@ -13,16 +14,20 @@ ${testbed}       ./testbed.yaml
 
 {% for device in devices %}
 Check OSPF interface state on device {{ device.name }}
-    [Tags]    robot:continue-on-failure
     ${result}=  parse "show ip ospf neighbor detail" on device "{{ device.name }}"
     Log Dictionary   ${result}
     ${interfaces}=  dq query  data=${result}  filters=get_values('interfaces')
     Log   ${interfaces}
-    ${s}=   Evaluate  {{ device.params.ospf_interfaces }}
-    Log  ${s}
     {% for ospf_int in device.params.ospf_interfaces %}
     List Should Contain Value   ${interfaces}   {{ ospf_int.name }}   msg=OSPF interface {{ ospf_int.name }} has no neighbors
     {% endfor %}
+
+Check loopback routes on device {{ device.name }}
+    ${loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
+    FOR  ${r}   IN   ${loopbacks}
+        ${result}=  parse "show ip route ${r}" on device "{{ device.name }}"
+        Log Dictionary   ${result}
+    END
 {% endfor %}
 
 
