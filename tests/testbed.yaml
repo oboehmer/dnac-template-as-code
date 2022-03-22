@@ -81,7 +81,7 @@ devices:
         class: unicon.Unicon
       cli:
         protocol: ssh
-        ip: 198.19.10.13
+        ip: 198.19.10.14
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
         proxy: ssh-jumphost
 
