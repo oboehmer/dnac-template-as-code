@@ -23,8 +23,8 @@ Check OSPF interface state on device {{ device.name }}
     {% endfor %}
 
 Check loopback routes on device {{ device.name }}
-    ${loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
-    FOR  ${r}   IN   ${loopbacks}
+    @{loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
+    FOR  ${r}   IN   @{loopbacks}
         ${result}=  parse "show ip route ${r}" on device "{{ device.name }}"
         Log Dictionary   ${result}
     END
