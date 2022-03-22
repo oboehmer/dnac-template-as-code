@@ -23,11 +23,12 @@ Check OSPF interface state on device {{ device.name }}
     {% endfor %}
 
 Check loopback routes on device {{ device.name }}
-    @{loopbacks}=   Create List   1.1.1.1   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
+    @{loopbacks}=   Create List   198.30.10.99   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
     FOR  ${r}   IN   @{loopbacks}
         ${result}=  parse "show ip route ${r}" on device "{{ device.name }}"
         Log    ${result}
-        Should be True    len($result['entry'].get('${r}/32', []) > 0    msg=route ${r}/32 not found
+        ${r}=    dq query  data=${result}  filters=contains('${r}/32')
+        Log    ${r}
     END
 {% endfor %}
 
