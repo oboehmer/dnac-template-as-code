@@ -6,6 +6,7 @@
 #
 dnac:
   base_url: https://198.18.129.100
+  # Note: the scripts have been tested with 2.2.3.3. Earlier versions might show issues
   version: 2.2.3.3
   username: cicd
   password: '%ENV{DNAC_PASSWORD}'

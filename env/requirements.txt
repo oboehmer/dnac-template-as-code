@@ -1,7 +1,4 @@
 dnacentersdk==2.4.6
-# dnacentersdk doesn't expose language parameter for create/update_template
-# using fork which adds this
-# git+https://github.com/oboehmer/dnacentersdk.git@cleur21
 webexteamssdk==1.6
 attrdict==2.0.1
 PyYAML==5.3.1

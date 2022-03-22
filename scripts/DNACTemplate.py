@@ -46,6 +46,8 @@ class DNACTemplate(object):
             return
 
         # login to DNAC
+        if self.config.dnac.version != '2.2.3.3':
+            logger.warn('This class has been tested with DNAC 2.2.3.3, please expect some issues with earlier releases')
         try:
             self.dnac = api.DNACenterAPI(**self.config.dnac)
         except ApiError:
