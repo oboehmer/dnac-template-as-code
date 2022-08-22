@@ -5,10 +5,10 @@
 #   password: '%ENV(DNAC_PASSWORD)'
 #
 dnac:
-  base_url: https://198.18.129.100
+  base_url: '%ENV{DNAC_URL}'
   # Note: the scripts have been tested with 2.2.3.3. Earlier versions might show issues
   version: 2.2.3.3
-  username: cicd
+  username: '%ENV{DNAC_USERNAME}'
   password: '%ENV{DNAC_PASSWORD}'
   verify: False
 
@@ -17,7 +17,9 @@ template_project: CICD
 
 notify:
   # specify room_id and/or WebexTeams person email
-  room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
+  # droom_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
+  persons:
+    - imanassy@cisco.com
   # persons:
   #   - oboehmer@cisco.com
 
