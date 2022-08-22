@@ -20,6 +20,8 @@ validate:
   stage: validate
   script:
     - python scripts/validate.py
+  tags:
+    - macos
 
 # provision templates on DNAC, delete those which have been removed from the repo
 provision_templates:
@@ -38,6 +40,8 @@ provision_templates:
       - results-1-provision.json
   script:
     - python scripts/provision_templates.py --config $CONFIG_YAML --template_dir $TEMPLATE_DIR --results results-1-provision.json $DEBUG
+  tags:
+    - macos
 
 preview_templates:
   image: ${RUNNER_IMAGE}
@@ -55,6 +59,8 @@ preview_templates:
       - template-preview.txt
   script:
     - python scripts/preview_templates.py --config $CONFIG_YAML --outfile template-preview.txt --deploy_dir $DEPLOY_DIR $DEBUG
+  tags:
+    - macos
 
 #  deploy templates on devices (environment controlled through vars.sh settigns)
 deploy_templates:
@@ -73,6 +79,8 @@ deploy_templates:
       - results-2-deploy.json
   script:
     - python scripts/deploy_templates.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --results results-2-deploy.json $DEBUG
+  tags:
+    - macos
 
 test:
   image: ${RUNNER_IMAGE}
@@ -102,6 +110,8 @@ test:
     - robot --name 'DNAC Template Tests' --outputdir out/ --xunit output-junit.xml --variable testbed:$TESTBED --extension robot .
   after_script:
     - python scripts/parse_testresults.py tests/out/output.xml results-3-tests.json
+  tags:
+    - macos
 
 # last step in the pipeline to report status
 # we need multiple steps here as we want/need to differentiate between success
@@ -116,6 +126,8 @@ notify_success:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
     - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
     - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS  "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
+  tags:
+    - macos
 
 notify_failure:
   image: ${RUNNER_IMAGE}
@@ -125,3 +137,5 @@ notify_failure:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
     - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
     - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+  tags:
+    - macos
