@@ -6,6 +6,6 @@ RUN pip install -r /tmp/requirements.txt && rm -f /tmp/requirements.txt
 RUN apt-get update && apt-get install git
 RUN cd / \
 	&& git init \
-	&& git remote add origin https://github.com/imanassypov/dnac-template-as-code \
+	&& git remote add origin https://gitlab.com/imanassypov/dnac-template-as-code.git \
 	&& git fetch \
 	&& git checkout master -f
