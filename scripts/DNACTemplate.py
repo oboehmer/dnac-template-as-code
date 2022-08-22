@@ -228,7 +228,7 @@ class DNACTemplate(object):
                     'composite': False,
                     'deviceTypes': [{'productFamily': 'Routers'}, 
                                     {'productFamily': 'Switches and Hubs'},
-                                    {'productFamily': 'Wireless Controller'},]
+                                    {'productFamily': 'Wireless Controller'},],
                     'softwareType': "IOS-XE",
                     'softwareVersion': None,
                     'tags': [],
