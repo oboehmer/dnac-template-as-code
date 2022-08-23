@@ -10,7 +10,7 @@ stages:
 
 build_image:
     image:
-        docker:stable
+        docker:latest
     variables:
         IMAGE_NAME: imanassypov/dnac-template-as-code
         IMAGE_TAG: 1.0
