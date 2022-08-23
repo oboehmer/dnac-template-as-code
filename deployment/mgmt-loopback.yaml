@@ -3,9 +3,9 @@ test_template: loopback-tests.j2
 
 params:
   id: 99
-  descr: Management loopback descr
+  descr: Management loopback Igor_Loopback
 
 devices:
   wlc01:
     params:
-      ipv4: 172.31.1.1
+      ipv4: 172.31.5.5
