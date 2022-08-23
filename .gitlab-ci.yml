@@ -2,13 +2,14 @@
 #  RUNNER_IMAGE: dockerhub.cisco.com/as-dev-docker-local/cisco/cleur21_semops21:v2
 
 stages:
+  - build
   - validate
   - provision
   - deploy
   - test
   - notify
 
-build_image:
+build:
     image:
         docker:latest
     variables:
