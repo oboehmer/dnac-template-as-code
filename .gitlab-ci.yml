@@ -16,14 +16,12 @@ build_image:
         - name: registry.hub.docker.com/library/docker:19.03.12-dind
     stage: build
     variables:
-        IMAGE_NAME: 'imanassypov/dnac-template-as-code'
-        IMAGE_TAG: '1.0'
         DOCKER_TLS_CERTDIR: "/certs"
     before_script:
         - docker login -u $REGISTRY_USER -p "$(echo -n "$REGISTRY_PASS" | base64 -d)"
     script:
-        - docker build --no-cache -t $IMAGE_NAME:$IMAGE_TAG env
-        - docker push $IMAGE_NAME:$IMAGE_TAG
+        - docker build --no-cache -t $RUNNER_IMAGE env
+        - docker push $RUNNER_IMAGE
     tags:
         - macos
 
