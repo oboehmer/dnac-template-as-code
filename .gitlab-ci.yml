@@ -12,8 +12,8 @@ build_image:
     image:
         docker:latest
     variables:
-        IMAGE_NAME: imanassypov/dnac-template-as-code
-        IMAGE_TAG: 1.0
+        IMAGE_NAME: 'imanassypov/dnac-template-as-code'
+        IMAGE_TAG: '1.0'
     before_script:
         - docker login -u $REGISTRY_USER -p "$(echo -n "$REGISTRY_PASS" | base64 -d)"
     script:
