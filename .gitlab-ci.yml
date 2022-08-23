@@ -11,7 +11,7 @@ stages:
 
 build_image:
     image:
-        docker:latest
+        python:3.6
     stage: build
     variables:
         IMAGE_NAME: 'imanassypov/dnac-template-as-code'
