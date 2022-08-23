@@ -8,6 +8,20 @@ stages:
   - test
   - notify
 
+build_image:
+    image:
+        docker:stable
+    variables:
+        IMAGE_NAME: imanassypov/dnac-template-as-code
+        IMAGE_TAG: 1.0
+    before_script:
+        - docker login -u $REGISTRY_USER -p "$(echo -n "$REGISTRY_PASS" | base64 -d)"
+    script:
+        - docker build --no-cache -t $IMAGE_NAME:$IMAGE_TAG env
+        - docker push $IMAGE_NAME:$IMAGE_TAG
+    tags:
+        - macos
+
 # we want to use different deployment parameters (i.e. different DNAC 
 # server and/or project) and different notification rules depending on 
 # if we run in master branch or in non-master branches
