@@ -9,9 +9,10 @@ stages:
   - test
   - notify
 
-build:
+build_image:
     image:
         docker:latest
+    stage: build
     variables:
         IMAGE_NAME: 'imanassypov/dnac-template-as-code'
         IMAGE_TAG: '1.0'
