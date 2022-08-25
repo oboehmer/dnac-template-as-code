@@ -104,6 +104,7 @@ class DNACTemplate(object):
         template_comments_jinja = "{{## {} ##}}\n"
         template_comments_velocity = '## {}\n'
         template_comments = template_comments_jinja if (language=='JINJA') else template_comments_velocity
+
         file_diff = ""
         diff_comments = ""
 
@@ -257,8 +258,8 @@ class DNACTemplate(object):
             'errors': 0,
         }
 
-        commit_log = self.get_commit_log('.',
-                                         int(self.config.commit_history_count))
+        commit_log = self.get_commit_log(repo_path='/',
+                                         commits_count=int(self.config.commit_history_count))
 
         # first remember which customers are currently provisioned so we can
         # handle deletion of the whole customer file
@@ -279,7 +280,7 @@ class DNACTemplate(object):
             with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
                 language = self.get_template_langauge(template_content)
-                template_diff = self.get_file_diff(repo_path='.',
+                template_diff = self.get_file_diff(repo_path='/',
                                                    filename=os.path.join(template_dir, template_file),
                                                    language = language)
                 # DNAC requires includes to include the absolute path, so we make this
