@@ -17,6 +17,7 @@ import re
 import time
 from datetime import datetime
 from attrdict import AttrDict
+from git import Repo, Git
 
 import urllib3
 import yaml
@@ -35,6 +36,9 @@ def _basename(path):
 
 
 class DNACTemplate(object):
+
+    #fixed CHAR length of comments field in DNAC Template
+    COMMENTS_MAX_CHARS = 1024
 
     def __init__(self, config_file=None, project=None, connect=True):
         # read config file
@@ -57,6 +61,39 @@ class DNACTemplate(object):
         # get project id, create project if needed
         self.template_project = project or self.config.template_project
         self.template_project_id = self.get_project_id(self.template_project)
+
+    def get_commit_log(self, repo_path='.', commits_count=5):
+        '''
+        get formatted string of latest 'n' commit changes
+        used to populate comments section in DNAC templates
+        '''
+        repo = Repo(repo_path)
+
+        commit_log=""
+
+        commit_template = (
+            "----\n" + \
+            "sha: {}\n" + \
+            "\"{}\" by {} ({})\n" + \
+            "{}\n")
+
+        if not repo.bare:
+            print('Repo at {} successfully loaded.'.format(repo_path))
+            # create list of commits then print some of them to stdout
+            commits = list(repo.iter_commits('master'))[:commits_count]
+            for commit in commits:
+                commit_log += commit_template.format(str(commit.hexsha),
+                                                     commit.summary,
+                                                     commit.author.name,
+                                                     commit.author.email,
+                                                     str(commit.authored_datetime),)
+                pass
+        else:
+            logger.fatal('Could not load repository at {} :'.format(repo_path))
+            raise Exception('Could not load repository at {} :'.format(repo_path))
+
+        return commit_log
+
 
     def get_project_id(self, project):
         '''
@@ -192,6 +229,9 @@ class DNACTemplate(object):
             'errors': 0,
         }
 
+        commit_log = self.get_commit_log('.',
+                                         int(self.config.commit_history_count))
+
         # first remember which customers are currently provisioned so we can
         # handle deletion of the whole customer file
         provisioned_templates = self.retrieve_provisioned_templates()
@@ -283,9 +323,13 @@ class DNACTemplate(object):
                 raise Exception('Creation of template "{}" failed: {}'.format(template_name, data))
 
             # Commit the template
+            comments = ('committed by gitlab-ci at {} UTC\n' +
+                         commit_log).format(datetime.utcnow())
+            # Template comments length is limited to COMMENTS_MAX_CHARS
+            comments = (comments[:self.COMMENTS_MAX_CHARS]) if len(comments) > self.COMMENTS_MAX_CHARS else comments
             response = self.dnac.configuration_templates.version_template(
                 templateId=template_id,
-                comments='committed by gitlab-ci at {} UTC'.format(datetime.utcnow()))
+                comments=comments)
             self.wait_and_check_status(response)
 
             pushed_templates.append(template_name)

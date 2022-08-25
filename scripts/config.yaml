@@ -15,6 +15,9 @@ dnac:
 # DNAC project we maintain
 template_project: CICD
 
+# Number of last commits to publish to DNAC template comments section
+commit_history_count: '5'
+
 notify:
   # specify room_id and/or WebexTeams person email
   # droom_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
