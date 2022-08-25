@@ -9,3 +9,4 @@ unicon>=22.2,<22.3
 unicon.plugins>=22.2,<22.3
 genie>=22.2,<22.3
 genie.libs.robot>=22.2,<22.3
+GitPython==3.1.18
