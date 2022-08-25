@@ -51,7 +51,7 @@ class DNACTemplate(object):
         # check if running in runner env or local
         if self.config.git_root is None:
             self.config.git_root = "."
-        logger.info('git root folder at: {}'.format(self.git_root))
+        logger.info('git root folder at: {}'.format(self.config.git_root))
 
         if connect is False:
             return
