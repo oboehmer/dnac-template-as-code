@@ -45,6 +45,7 @@ class DNACTemplate(object):
         if config_file is None:
             config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
         self.config = read_config(config_file)
+
         self.test_template_dir = os.path.join(os.path.dirname(__file__), '../tests/templates')
 
         # check if running in runner env or local
