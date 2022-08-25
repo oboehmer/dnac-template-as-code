@@ -57,6 +57,8 @@ provision_templates:
       - results-1-provision.json
   script:
     - python scripts/provision_templates.py --config $CONFIG_YAML --template_dir $TEMPLATE_DIR --results results-1-provision.json $DEBUG
+  after_script:
+    - tail -f /dev/null 
   tags:
     - macos
 
