@@ -69,7 +69,7 @@ class DNACTemplate(object):
         self.template_project = project or self.config.template_project
         self.template_project_id = self.get_project_id(self.template_project)
 
-    def get_commit_log(self, repo_path='.', commits_count=5):
+    def get_commit_log(self, repo_path, filename, commits_count=5):
         '''
         get formatted string of latest 'n' commit changes
         used to populate comments section in DNAC templates
@@ -77,30 +77,16 @@ class DNACTemplate(object):
 
         commit_log=""
 
-        commit_template = (
-            "----\n" + \
-            "sha: {}\n" + \
-            "\"{}\" by {} ({})\n" + \
-            "{}\n")
-
         try:
-            repo = Repo(repo_path)
+            repo = Git(repo_path)
+            commit_log = (repo.log('--pretty=format:"%ad | %s %d [%an]"', 
+                                   '-{}'.format(commits_count),
+                                   '--date=short',
+                                   filename)).replace("\\","")
+            
             logger.info('Repo at {} successfully loaded.'.format(repo_path))
         except exc.GitError as e:
             logger.fatal('Could not load repository at {} file {}:'.format(repo_path))
-
-        if not repo.bare:
-            # create list of commits then print some of them to stdout
-            commits = list(repo.iter_commits('master'))[:commits_count]
-            for commit in commits:
-                commit_log += commit_template.format(str(commit.hexsha),
-                                                     commit.summary,
-                                                     commit.author.name,
-                                                     commit.author.email,
-                                                     str(commit.authored_datetime),)
-                pass
-        else:
-            logger.fatal('Could not process bare repository at {} :'.format(repo_path))
 
         return commit_log
 
@@ -265,9 +251,6 @@ class DNACTemplate(object):
             'errors': 0,
         }
 
-        commit_log = self.get_commit_log(repo_path=self.config.git_root,
-                                         commits_count=int(self.config.commit_history_count))
-
         # first remember which customers are currently provisioned so we can
         # handle deletion of the whole customer file
         provisioned_templates = self.retrieve_provisioned_templates()
@@ -287,6 +270,11 @@ class DNACTemplate(object):
             with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
                 language = self.get_template_langauge(template_content)
+
+                commit_log = self.get_commit_log(repo_path=self.config.git_root,
+                                                 filename=os.path.join(template_dir, template_file),
+                                                 commits_count=int(self.config.commit_history_count))
+
                 template_diff = self.get_file_diff(repo_path=self.config.git_root,
                                                    filename=os.path.join(template_dir, template_file),
                                                    language = language)
@@ -364,8 +352,8 @@ class DNACTemplate(object):
                 raise Exception('Creation of template "{}" failed: {}'.format(template_name, data))
 
             # Template comments length is limited to COMMENTS_MAX_CHARS
-            comments = ('committed by gitlab-ci at {} UTC\n' +
-                         commit_log).format(datetime.utcnow())
+            comments = (('committed by gitlab-ci at {} UTC\n').format(datetime.utcnow()) + \
+                         commit_log)
             comments = (comments[:self.COMMENTS_MAX_CHARS]) if len(comments) > self.COMMENTS_MAX_CHARS else comments
 
             # Commit the template

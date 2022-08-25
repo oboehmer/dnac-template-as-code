@@ -16,7 +16,7 @@ dnac:
 template_project: CICD
 
 # Number of last commits to publish to DNAC template comments section
-commit_history_count: '5'
+commit_history_count: '3'
 # when executed in gitrunner environment
 # git clone root is at CI_PROJECT_DIR path
 # otherwise if empty will initialize to '.'
