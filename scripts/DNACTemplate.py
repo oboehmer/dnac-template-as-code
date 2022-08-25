@@ -48,8 +48,8 @@ class DNACTemplate(object):
         self.test_template_dir = os.path.join(os.path.dirname(__file__), '../tests/templates')
 
         # check if running in runner env or local
-        if self.git_root is None:
-            self.git_root = "."
+        if self.config.git_root is None:
+            self.config.git_root = "."
             logger.info('git root folder at: {}'.format(self.git_root))
 
         if connect is False:
@@ -264,7 +264,7 @@ class DNACTemplate(object):
             'errors': 0,
         }
 
-        commit_log = self.get_commit_log(repo_path=self.git_root,
+        commit_log = self.get_commit_log(repo_path=self.config.git_root,
                                          commits_count=int(self.config.commit_history_count))
 
         # first remember which customers are currently provisioned so we can
@@ -286,7 +286,7 @@ class DNACTemplate(object):
             with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
                 language = self.get_template_langauge(template_content)
-                template_diff = self.get_file_diff(repo_path=self.git_root,
+                template_diff = self.get_file_diff(repo_path=self.config.git_root,
                                                    filename=os.path.join(template_dir, template_file),
                                                    language = language)
                 # DNAC requires includes to include the absolute path, so we make this
