@@ -20,7 +20,7 @@ build_image:
     before_script:
         - docker login -u $REGISTRY_USER -p "$(echo -n "$REGISTRY_PASS" | base64 -d)"
     script:
-        - docker build --no-cache -t $RUNNER_IMAGE env
+        - docker build -t $RUNNER_IMAGE env
         - docker push $RUNNER_IMAGE
     tags:
         - macos
