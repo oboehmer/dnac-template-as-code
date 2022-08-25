@@ -17,6 +17,11 @@ template_project: CICD
 
 # Number of last commits to publish to DNAC template comments section
 commit_history_count: '5'
+# when executed in gitrunner environment
+# git clone root is at CI_PROJECT_DIR path
+# otherwise if empty will initialize to '.'
+# used to extract commit history to templates
+git_root: '%ENV{CI_PROJECT_DIR}'
 
 notify:
   # specify room_id and/or WebexTeams person email
