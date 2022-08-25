@@ -17,7 +17,7 @@ import re
 import time
 from datetime import datetime
 from attrdict import AttrDict
-from git import Repo, Git
+from git import Repo, Git, exc
 
 import urllib3
 import yaml
@@ -67,7 +67,6 @@ class DNACTemplate(object):
         get formatted string of latest 'n' commit changes
         used to populate comments section in DNAC templates
         '''
-        repo = Repo(repo_path)
 
         commit_log=""
 
@@ -77,8 +76,13 @@ class DNACTemplate(object):
             "\"{}\" by {} ({})\n" + \
             "{}\n")
 
+        try:
+            repo = Repo(repo_path)
+            logger.info('Repo at {} successfully loaded.'.format(repo_path))
+        except exc.GitError as e:
+            logger.fatal('Could not load repository at {} file {}:'.format(repo_path))
+
         if not repo.bare:
-            print('Repo at {} successfully loaded.'.format(repo_path))
             # create list of commits then print some of them to stdout
             commits = list(repo.iter_commits('master'))[:commits_count]
             for commit in commits:
@@ -89,10 +93,34 @@ class DNACTemplate(object):
                                                      str(commit.authored_datetime),)
                 pass
         else:
-            logger.fatal('Could not load repository at {} :'.format(repo_path))
-            raise Exception('Could not load repository at {} :'.format(repo_path))
+            logger.fatal('Could not process bare repository at {} :'.format(repo_path))
 
         return commit_log
+
+    def get_file_diff(self, repo_path, filename, language):
+        '''
+        get last modification to the template file from git log
+        '''
+        template_comments_jinja = "{{## {} ##}}\n"
+        template_comments_velocity = '## {}\n'
+        template_comments = template_comments_jinja if (language=='JINJA') else template_comments_velocity
+        file_diff = ""
+        diff_comments = ""
+
+        try:
+            repo = Git(repo_path)
+            file_diff = repo.log('--pretty=%H','-p','-1', filename)
+            logger.info('git log for file {} loaded at {} chars'.format(repo_path,
+                                                                        len(file_diff)))
+        except exc.GitError as e:
+            logger.fatal('Could not load repository at {} file {}:'.format(repo_path,
+                                                                           filename))
+
+        for l in file_diff.splitlines():
+            if len(l):
+                diff_comments += template_comments.format(l)
+
+        return diff_comments
 
 
     def get_project_id(self, project):
@@ -250,12 +278,17 @@ class DNACTemplate(object):
             logger.debug('processing file "{}"'.format(template_file))
             with open(os.path.join(template_dir, template_file), 'r') as fd:
                 template_content = fd.read()
+                language = self.get_template_langauge(template_content)
+                template_diff = self.get_file_diff(repo_path='.',
+                                                   filename=os.path.join(template_dir, template_file),
+                                                   language = language)
                 # DNAC requires includes to include the absolute path, so we make this
                 # dependent on the project (i.e. {% include "__PROJECT__/foo" %} )
-                template_content = re.sub('__PROJECT__', self.template_project, template_content)
+                template_content = template_diff + \
+                                   re.sub('__PROJECT__', self.template_project, template_content)
 
             template_name = template_file
-            language = self.get_template_langauge(template_content)
+            
             current_template = provisioned_templates.get(template_name)
             if not current_template:
                 # new template
@@ -322,11 +355,12 @@ class DNACTemplate(object):
             if not template_id:
                 raise Exception('Creation of template "{}" failed: {}'.format(template_name, data))
 
-            # Commit the template
+            # Template comments length is limited to COMMENTS_MAX_CHARS
             comments = ('committed by gitlab-ci at {} UTC\n' +
                          commit_log).format(datetime.utcnow())
-            # Template comments length is limited to COMMENTS_MAX_CHARS
             comments = (comments[:self.COMMENTS_MAX_CHARS]) if len(comments) > self.COMMENTS_MAX_CHARS else comments
+
+            # Commit the template
             response = self.dnac.configuration_templates.version_template(
                 templateId=template_id,
                 comments=comments)
