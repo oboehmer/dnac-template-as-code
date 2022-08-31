@@ -141,7 +141,7 @@ class DNACTemplate(object):
         response.data
         '''
         def _is_scalar(val):
-            return type(val) not in (list, tuple, dict)
+            return type(val) not in (list, tuple, dict, None)
 
         attempt = 0
         result = None
