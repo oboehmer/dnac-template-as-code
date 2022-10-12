@@ -36,10 +36,6 @@ def _basename(path):
 
 
 class DNACTemplate(object):
-
-    #fixed CHAR length of comments field in DNAC Template
-    COMMENTS_MAX_CHARS = 1024
-
     def __init__(self, config_file=None, project=None, connect=True):
         # read config file
         if config_file is None:
@@ -69,50 +65,47 @@ class DNACTemplate(object):
         self.template_project = project or self.config.template_project
         self.template_project_id = self.get_project_id(self.template_project)
 
-    def get_commit_log(self, repo_path, filename, commits_count=5):
+        # get reference to local git clone repo
+        try:
+            repo_path = self.config.git_root
+            self.repo = Git(repo_path)
+            logger.info('Repo at {} successfully loaded.'.format(repo_path))
+        except exc.GitError as e:
+            logger.warn('Could not load repository at {} file {}:'.format(repo_path))
+            self.repo=None
+
+    def get_commit_log(self, filename, commits_count=5):
         '''
         get formatted string of latest 'n' commit changes
         used to populate comments section in DNAC templates
+        return empty string if local git repo is not initialized
         '''
-
-        commit_log=""
-
-        try:
-            repo = Git(repo_path)
-            commit_log = (repo.log('--pretty=format:"%ad | %s %d [%an]"', 
-                                   '-{}'.format(commits_count),
-                                   '--date=short',
-                                   filename)).replace("\\","")
-            
-            logger.info('Repo at {} successfully loaded.'.format(repo_path))
-        except exc.GitError as e:
-            logger.fatal('Could not load repository at {} file {}:'.format(repo_path))
+        commit_log = ""
+        if self.repo is not None:
+            commit_log = (self.repo.log('--pretty=format:"%ad | %s %d [%an]"', 
+                                    '-{}'.format(commits_count),
+                                    '--date=short',
+                                    filename)).replace("\\","")
 
         return commit_log
 
-    def get_file_diff(self, repo_path, filename, language):
+    def get_file_diff(self, filename, language):
         '''
         get last modification to the template file from git log
+        return empty string if local git repo is not initialized
         '''
         template_comments_jinja = "{{## {} ##}}\n"
         template_comments_velocity = '## {}\n'
         template_comments = template_comments_jinja if (language=='JINJA') else template_comments_velocity
 
-        file_diff = ""
         diff_comments = ""
 
-        try:
-            repo = Git(repo_path)
-            file_diff = repo.log('--pretty=%H','-p','-1', filename)
-            logger.info('git log for file {} loaded at {} chars'.format(repo_path,
-                                                                        len(file_diff)))
-        except exc.GitError as e:
-            logger.fatal('Could not load repository at {} file {}:'.format(repo_path,
-                                                                           filename))
+        if self.repo is not None:
+            file_diff = self.repo.log('--pretty=%H','-p','-1', filename)
 
-        for l in file_diff.splitlines():
-            if len(l):
-                diff_comments += template_comments.format(l)
+            for l in file_diff.splitlines():
+                if len(l):
+                    diff_comments += template_comments.format(l)
 
         return diff_comments
 
@@ -271,17 +264,15 @@ class DNACTemplate(object):
                 template_content = fd.read()
                 language = self.get_template_langauge(template_content)
 
-                commit_log = self.get_commit_log(repo_path=self.config.git_root,
-                                                 filename=os.path.join(template_dir, template_file),
+                commit_log = self.get_commit_log(filename=os.path.join(template_dir, template_file),
                                                  commits_count=int(self.config.commit_history_count))
 
-                template_diff = self.get_file_diff(repo_path=self.config.git_root,
-                                                   filename=os.path.join(template_dir, template_file),
+                template_diff = self.get_file_diff(filename=os.path.join(template_dir, template_file),
                                                    language = language)
                 # DNAC requires includes to include the absolute path, so we make this
                 # dependent on the project (i.e. {% include "__PROJECT__/foo" %} )
-                template_content = template_diff + \
-                                   re.sub('__PROJECT__', self.template_project, template_content)
+                template_content = '{}{}'.format(template_diff,
+                                   re.sub('__PROJECT__', self.template_project, template_content))
 
             template_name = template_file
             
@@ -351,10 +342,10 @@ class DNACTemplate(object):
             if not template_id:
                 raise Exception('Creation of template "{}" failed: {}'.format(template_name, data))
 
-            # Template comments length is limited to COMMENTS_MAX_CHARS
+            # Template comments length is limited to fixed number of characters
             comments = (('committed by gitlab-ci at {} UTC\n').format(datetime.utcnow()) + \
                          commit_log)
-            comments = (comments[:self.COMMENTS_MAX_CHARS]) if len(comments) > self.COMMENTS_MAX_CHARS else comments
+            comments = comments[:self.config.dnac_cli_template_summary_chars]
 
             # Commit the template
             response = self.dnac.configuration_templates.version_template(
