@@ -22,6 +22,8 @@ build_image:
     script:
         - docker build -t $RUNNER_IMAGE env
         - docker push $RUNNER_IMAGE
+    # we can assign the tags to Runner to classify it or git it an alias to identify the Runner on GitLab
+    # tag below references a local Runner I have deployed on MACOS laptop
     tags:
         - macos
 
