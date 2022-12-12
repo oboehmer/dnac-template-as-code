@@ -5,19 +5,26 @@
 #   password: '%ENV(DNAC_PASSWORD)'
 #
 dnac:
-  base_url: https://198.18.129.100
+  base_url: '%ENV{DNAC_URL}'
   # Note: the scripts have been tested with 2.2.3.3. Earlier versions might show issues
   version: 2.2.3.3
-  username: cicd
+  username: '%ENV{DNAC_USERNAME}'
   password: '%ENV{DNAC_PASSWORD}'
   verify: False
 
 # DNAC project we maintain
 template_project: CICD
 
+# Number of last commits to publish to DNAC template comments section
+commit_history_count: '3'
+# when executed in gitrunner environment
+# git clone root is at CI_PROJECT_DIR path
+# otherwise if empty will initialize to '.'
+# used to extract commit history to templates
+git_root: '%ENV{CI_PROJECT_DIR}'
+
 notify:
   # specify room_id and/or WebexTeams person email
   room_id: Y2lzY29zcGFyazovL3VzL1JPT00vODM3NDAyMzAtYWEwMS0xMWVjLWE1OTMtYmJlOTBhNjY1OTMw
   # persons:
   #   - oboehmer@cisco.com
-
