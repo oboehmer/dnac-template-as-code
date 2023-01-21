@@ -44,10 +44,12 @@ class DNACTemplate(object):
 
         self.test_template_dir = os.path.join(os.path.dirname(__file__), '../tests/templates')
 
-        # check if running in runner env or local
-        if self.config.git_root is None:
+        if not hasattr(self.config, 'git_root') or self.config.git_root is None:
             self.config.git_root = "."
-        logger.info('git root folder at: {}'.format(self.config.git_root))
+        if not hasattr(self.config, 'commit_history_count'):
+            self.config.commit_history_count = 0
+        if not hasattr(self.config, 'dnac_cli_template_summary_chars'):
+            self.config.dnac_cli_template_summary_chars = 300
 
         if connect is False:
             return
@@ -81,7 +83,7 @@ class DNACTemplate(object):
         return empty string if local git repo is not initialized
         '''
         commit_log = ""
-        if self.repo is not None:
+        if self.repo is not None and commits_count > 0:
             commit_log = (self.repo.log('--pretty=format:"%ad | %s %d [%an]"', 
                                     '-{}'.format(commits_count),
                                     '--date=short',
