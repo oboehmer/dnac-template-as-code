@@ -4,26 +4,6 @@
 # inventory as an exercise to the reader
 
 devices:
-  wlc01:
-    type: router
-    os: ios
-    custom:
-      abstraction:
-        order: [os]
-      categories:
-      - ios
-    credentials:
-      default:
-        username: '%ENV{DEVICES_USERNAME}'
-        password: '%ENV{DEVICES_PASSWORD}'
-    connections:
-      defaults:
-        class: unicon.Unicon
-      cli:
-        protocol: ssh
-        ip: 10.85.54.99
-        ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
-
   CSR-1:
     type: router
     os: ios
@@ -43,7 +23,6 @@ devices:
         protocol: ssh
         ip: 198.19.10.11
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
-        proxy: ssh-jumphost
   CSR-2:
     type: router
     os: ios
@@ -63,7 +42,6 @@ devices:
         protocol: ssh
         ip: 198.19.10.12
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
-        proxy: ssh-jumphost
   CSR-3:
     type: router
     os: ios
