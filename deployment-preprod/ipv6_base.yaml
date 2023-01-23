@@ -1,0 +1,24 @@
+template_name: ipv6_base
+test_template: ipv6_base.j2
+
+devices:
+  CSR-5:
+    params:
+      ipv6_interfaces:
+        - name: GigabitEthernet2
+          ipv6_address: fd00:c1cd:1:30::5/64
+  CSR-6:
+    params:
+      ipv6_interfaces:
+        - name: GigabitEthernet2
+          ipv6_address: fd00:c1cd:1:30::6/64
+  CSR-7:
+    params:
+      ipv6_interfaces:
+        - name: GigabitEthernet2
+          ipv6_address: fd00:c1cd:1:30::7/64
+  CSR-8:
+    params:
+      ipv6_interfaces:
+        - name: GigabitEthernet2
+          ipv6_address: fd00:c1cd:1:30::8/64

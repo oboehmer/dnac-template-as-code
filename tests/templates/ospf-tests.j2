@@ -22,7 +22,7 @@ Check OSPF interface state on device {{ device.name }}
     List Should Contain Value   ${interfaces}   {{ ospf_int.name }}   msg=OSPF interface {{ ospf_int.name }} has no neighbors
     {% endfor %}
 
-Check loopback routes on device {{ device.name }}
+Check ipv4 loopback routes on device {{ device.name }}
     [Tags]  robot:continue-on-failure         # ensure test case runs through all routes
     @{loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv4_loopback}}    {% endfor %}
     FOR  ${r}   IN   @{loopbacks}
@@ -32,6 +32,18 @@ Check loopback routes on device {{ device.name }}
         Log    ${check}
         Should be True  len($check) > 0    msg=did not find ${r}/32 in routing table
     END
+
+Check ipv6 loopback routes on device {{ device.name }}
+    [Tags]  robot:continue-on-failure         # ensure test case runs through all routes
+    @{loopbacks}=   Create List   {% for d in devices %}{{d.params.ipv6_loopback | upper}}    {% endfor %}
+    FOR  ${r}   IN   @{loopbacks}
+        ${result}=  parse "show ipv6 route ${r}" on device "{{ device.name }}"
+        Log    ${result}
+        ${check}=    dq query  data=${result}  filters=contains('${r}/128')
+        Log    ${check}
+        Should be True  len($check) > 0    msg=did not find ${r}/128 in routing table
+    END
+
 {% endfor %}
 
 
