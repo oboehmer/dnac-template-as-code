@@ -22,7 +22,7 @@ ipv6 router ospf 1
 {% for interface in ospf_interfaces %}
 interface {{ interface.name }}
  ip ospf 1 area {{ interface.area }}
- {% if interface.ipv6_enabled | length %}
+ {% if interface.ipv6_enabled is defined %}
  ipv6 ospf 1 area {{ interface.area }}
  {% endif %}
 {% endfor %}

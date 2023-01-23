@@ -9,24 +9,32 @@ devices:
   CSR-5:
     params:
       ipv4_loopback: 172.0.0.5
+      ipv6_loopback: fd00:c1cd:1:2::5
       ospf_interfaces:
         - name: GigabitEthernet2
           area: 0
+          ipv6_enabled: true
   CSR-6:
     params:
       ipv4_loopback: 172.0.0.6
+      ipv6_loopback: fd00:c1cd:1:2::6
       ospf_interfaces:
         - name: GigabitEthernet2
           area: 0
+          ipv6_enabled: true
   CSR-7:
     params:
       ipv4_loopback: 172.0.0.7
+      ipv6_loopback: fd00:c1cd:1:2::7
       ospf_interfaces:
         - name: GigabitEthernet2
           area: 0
+          ipv6_enabled: true
   CSR-8:
     params:
       ipv4_loopback: 172.0.0.8
+      ipv6_loopback: fd00:c1cd:1:2::8
       ospf_interfaces:
         - name: GigabitEthernet2
           area: 0
+          ipv6_enabled: true

@@ -57,6 +57,7 @@ deploy_templates:
   script:
     - python scripts/deploy_templates.py --config $CONFIG_YAML --deploy_dir $DEPLOY_DIR --results results-2-deploy.json $DEBUG
 
+# render and run tests
 test:
   image: ${RUNNER_IMAGE}
   stage: test
@@ -79,10 +80,6 @@ test:
     - python scripts/parse_testresults.py tests/out/output.xml results-3-tests.json
 
 # last step in the pipeline to report status
-# we need multiple steps here as we want/need to differentiate between success
-# and failures.. the $(CI_JOB_STATUS) unfortunatly is not available in the
-# gitlab release used for this demo
-
 notify_success:
   image: ${RUNNER_IMAGE}
   stage: notify
@@ -91,7 +88,6 @@ notify_success:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
     - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
     - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS  "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
-
 
 notify_failure:
   image: ${RUNNER_IMAGE}

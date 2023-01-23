@@ -14,8 +14,8 @@ dnac:
 
 # DNAC project we maintain
 template_project: CICD-staging
-# include last 3 commit changelog in the template
-commit_history_count: 3
+# do not capture latest diff in DNAC template comments
+show_diffs: False
 
 notify:
   # specify room_id and/or WebexTeams person email

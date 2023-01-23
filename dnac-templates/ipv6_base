@@ -1,0 +1,7 @@
+ipv6 unicast-routing
+!
+{% for intf in ipv6_interfaces %}
+interface {{ intf.name }}
+ no ipv6 address
+ ipv6 address {{ intf.ipv6_address }}
+{% endfor %}

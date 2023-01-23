@@ -44,6 +44,8 @@ class DNACTemplate(object):
 
         self.test_template_dir = os.path.join(os.path.dirname(__file__), '../tests/templates')
 
+        if not hasattr(self.config, 'show_diffs'):
+            self.config.show_diffs = False
         if not hasattr(self.config, 'git_root') or self.config.git_root is None:
             self.config.git_root = "."
         if not hasattr(self.config, 'commit_history_count'):
@@ -269,8 +271,11 @@ class DNACTemplate(object):
                 commit_log = self.get_commit_log(filename=os.path.join(template_dir, template_file),
                                                  commits_count=int(self.config.commit_history_count))
 
-                template_diff = self.get_file_diff(filename=os.path.join(template_dir, template_file),
-                                                   language = language)
+                if self.config.show_diffs:
+                    template_diff = self.get_file_diff(filename=os.path.join(template_dir, template_file),
+                                                       language = language)
+                else:
+                    template_diff = ''
                 # DNAC requires includes to include the absolute path, so we make this
                 # dependent on the project (i.e. {% include "__PROJECT__/foo" %} )
                 template_content = '{}{}'.format(template_diff,

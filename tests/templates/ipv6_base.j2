@@ -1,0 +1,19 @@
+*** Settings ***
+Library       pyats.robot.pyATSRobot
+Library       unicon.robot.UniconRobot
+Library       genie.libs.robot.GenieRobot
+Library       Collections
+
+Suite Setup   use testbed "${testbed}"
+
+*** Test Cases ***
+
+{% for device in devices %}
+{% for intf in  device.params.ipv6_interfaces %}
+ipv6 test {{ intf.name }} on device {{ device.name }}
+    connect to device "{{ device.name }}"
+    ${result}=  parse "show ipv6 interface {{ intf.name }}" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    Dictionary Should Contain Key    ${result}[{{ intf.name }}][ipv6]   {{ intf.ipv6_address | upper }}
+{% endfor %}
+{% endfor %}
