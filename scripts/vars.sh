@@ -6,7 +6,7 @@ TEMPLATE_DIR="dnac-templates/"
 DEBUG=""
 # DEBUG="--debug"
 
-if [ "$CI_COMMIT_REF_NAME" == "master" ] ; then
+if [ "$CI_COMMIT_REF_NAME" == "master" -o "$CI_COMMIT_REF_NAME" == "main" ] ; then
     CONFIG_YAML="scripts/config.yaml"
     DEPLOY_DIR="deployment/"
     TESTBED="testbed.yaml"

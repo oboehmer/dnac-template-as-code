@@ -10,7 +10,7 @@ stages:
 
 # we want to use different deployment parameters (i.e. different DNAC 
 # server and/or project) and different notification rules depending on 
-# if we run in master branch or in non-master branches
+# if we run in main branch or in non-main branches
 before_script:
   - source scripts/vars.sh
 
