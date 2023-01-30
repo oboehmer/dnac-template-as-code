@@ -23,6 +23,9 @@ devices:
         protocol: ssh
         ip: 198.19.10.11
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
+        settings:
+          GRACEFUL_DISCONNECT_WAIT_SEC: 0
+          POST_DISCONNECT_WAIT_SEC: 0
   CSR-2:
     type: router
     os: ios
@@ -42,6 +45,9 @@ devices:
         protocol: ssh
         ip: 198.19.10.12
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
+        settings:
+          GRACEFUL_DISCONNECT_WAIT_SEC: 0
+          POST_DISCONNECT_WAIT_SEC: 0
   CSR-3:
     type: router
     os: ios
@@ -62,6 +68,9 @@ devices:
         ip: 198.19.10.13
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
         proxy: ssh-jumphost
+        settings:
+          GRACEFUL_DISCONNECT_WAIT_SEC: 0
+          POST_DISCONNECT_WAIT_SEC: 0
   CSR-4:
     type: router
     os: ios
@@ -82,6 +91,9 @@ devices:
         ip: 198.19.10.14
         ssh_options: -oKexAlgorithms=+diffie-hellman-group-exchange-sha1
         proxy: ssh-jumphost
+        settings:
+          GRACEFUL_DISCONNECT_WAIT_SEC: 0
+          POST_DISCONNECT_WAIT_SEC: 0
 
   ssh-jumphost:
     type: server
@@ -96,3 +108,6 @@ devices:
       cli:
         protocol: ssh
         ip: 198.18.133.198
+        settings:
+          GRACEFUL_DISCONNECT_WAIT_SEC: 0
+          POST_DISCONNECT_WAIT_SEC: 0

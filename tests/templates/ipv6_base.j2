@@ -5,7 +5,7 @@ Library       genie.libs.robot.GenieRobot
 Library       Collections
 
 Suite Setup   use testbed "${testbed}"
-
+Suite Teardown  disconnect from all devices
 *** Test Cases ***
 
 {% for device in devices %}

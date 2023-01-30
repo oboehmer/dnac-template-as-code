@@ -10,7 +10,7 @@ interface Loopback0
 {% endif %}
 !
 router ospf 1
- router-id {{ ipv4_loopback }} 
+ router-id {{ ipv4_loopback }}
  passive-interface Loopback0
 !
 ipv6 router ospf 1
