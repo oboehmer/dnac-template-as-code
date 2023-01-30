@@ -75,7 +75,7 @@ We are maintaing two types of data in the Git repository:
 
 **Deployment instructions** for some or all of the templates in [deployment/](deployment/), where template deployment is controlled through a yaml file which specifies the devices the template should be applied to and which parameters should be used.  
 Deployment files can also reference test templates to render deployment-/environment-specific test cases which are executed after deployment.  
-Multile depoloyment directories can be used, here we use a deployment-preprod/ directory to control deployment in non-master branches where we want to deploy into a test or pre-production envirnment.
+Multile depoloyment directories can be used, here we use a deployment-preprod/ directory to control deployment in non-main branches where we want to deploy into a test or pre-production envirnment.
 
 The [scripts/](scripts/) directory contains the DNACTemplate.py python module which implements most of the heavy lifting. Individual scripts in this directory (i.e. provision_templates.py, deploy_templates.py, etc.) are invoked within the pipeline, leveraging DNACTemplate python class to do their respective job.
 
@@ -84,7 +84,7 @@ In order to validate the specific template deployments, those tests can be rende
 
 ## Configuration
 
-Configuration items like DNAC endpoint, credentials, DNAC template project name and some other data like WebexTeams notification details is stored in yaml files. We maintain different config files for master-branch (config.yaml) and non-master branches (config-preprod.yaml). This will enable you to use different environments, like prod and preprod.
+Configuration items like DNAC endpoint, credentials, DNAC template project name and some other data like WebexTeams notification details is stored in yaml files. We maintain different config files for main-branch (config.yaml) and non-main branches (config-preprod.yaml). This will enable you to use different environments, like prod and preprod.
 
 Configuration items can reference environment variables (i.e. `password: '%ENV{DNAC_PASSWORD}'`), useful to keep password credentials or other sensitive value out of the git repo.
 
@@ -117,5 +117,5 @@ Device credentials and reachability information need to be pre-configured in pyA
 
 #### 5. Notification
 
-Pipeline results are sent to a WebEx Teams room (in master) or to the person pushing the change (non-master), these settings are controlled through config.yaml files.
+Pipeline results are sent to a WebEx Teams room (in main) or to the person pushing the change (non-main), these settings are controlled through config.yaml files.
 The notifcation also includes the results of the preview template as well as the log.html created during the previous testing step.
