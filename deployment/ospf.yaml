@@ -1,0 +1,40 @@
+template_name: ospf
+test_template: ospf-tests.j2
+
+params:
+ int_description: Routing loopback
+ loopback_area: 0
+
+devices:
+  CSR-1:
+    params:
+      ipv4_loopback: 172.0.20.1
+      ipv6_loopback: fd00:c1cd:1:20::1
+      ospf_interfaces:
+        - name: GigabitEthernet2
+          area: 0
+          ipv6_enabled: true
+  CSR-2:
+    params:
+      ipv4_loopback: 172.0.20.2
+      ipv6_loopback: fd00:c1cd:1:20::2
+      ospf_interfaces:
+        - name: GigabitEthernet2
+          area: 0
+          ipv6_enabled: true
+  CSR-3:
+    params:
+      ipv4_loopback: 172.0.20.3
+      ipv6_loopback: fd00:c1cd:1:20::3
+      ospf_interfaces:
+        - name: GigabitEthernet2
+          area: 0
+          ipv6_enabled: true
+  CSR-4:
+    params:
+      ipv4_loopback: 172.0.20.4
+      ipv6_loopback: fd00:c1cd:1:20::4
+      ospf_interfaces:
+        - name: GigabitEthernet2
+          area: 0
+          ipv6_enabled: true
