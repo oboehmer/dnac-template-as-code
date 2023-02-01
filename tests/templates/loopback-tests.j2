@@ -1,0 +1,27 @@
+*** Settings ***
+Library       pyats.robot.pyATSRobot
+Library       unicon.robot.UniconRobot
+Library       genie.libs.robot.GenieRobot
+Library       Collections
+
+Suite Setup   use testbed "${testbed}"
+
+*** Test Cases ***
+
+{% for device in devices %}
+
+ipv4 test Loopback{{ device.params.id }} on device {{ device.name }}
+    connect to device "{{ device.name }}"
+    ${result}=  parse "show interfaces" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    Should be Equal   ${result}[Loopback{{ device.params.id }}][line_protocol]   up
+    Dictionary Should Contain Key    ${result}[Loopback{{ device.params.id }}][ipv4]   {{ device.params.ipv4 }}/32
+
+{% if device.params.ipv6 | length %}
+ipv6 test Loopback{{ device.params.id }} on device {{ device.name }}
+    connect to device "{{ device.name }}"
+    ${result}=  parse "show ipv6 interface" on device "{{ device.name }}"
+    Log Dictionary   ${result}
+    Dictionary Should Contain Key    ${result}[Loopback{{ device.params.id }}][ipv6]   {{ device.params.ipv6 | upper }}/128
+{% endif %}
+{% endfor %}
