@@ -19,7 +19,3 @@ devices:
     params:
       ipv4: 172.31.1.3
       ipv6: fd00:c1cd:1:1::3
-  CSR-4:
-    params:
-      ipv4: 172.31.1.4
-      ipv6: fd00:c1cd:1:1::4
