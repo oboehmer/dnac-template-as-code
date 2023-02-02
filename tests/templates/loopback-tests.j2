@@ -22,6 +22,6 @@ ipv6 test Loopback{{ device.params.id }} on device {{ device.name }}
     connect to device "{{ device.name }}"
     ${result}=  parse "show ipv6 interface" on device "{{ device.name }}"
     Log Dictionary   ${result}
-    Dictionary Should Contain Key    ${result}[Loopback{{ device.params.id }}][ipv6]   {{ device.params.ipv6 }}/128
+    Dictionary Should Contain Key    ${result}[Loopback{{ device.params.id }}][ipv6]   {{ device.params.ipv6 | upper }}/128
 {% endif %}
 {% endfor %}
