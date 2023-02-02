@@ -1,0 +1,25 @@
+template_name: mgmt-loopback
+test_template: loopback-tests.j2
+
+params:
+  id: 99
+  descr: Management loopback
+  loopback_area: 0
+
+devices:
+  CSR-5:
+    params:
+      ipv4: 172.31.99.5
+      ipv6: fd00:c1cd:1:99::5
+  CSR-6:
+    params:
+      ipv4: 172.31.99.6
+      ipv6: fd00:c1cd:1:99::6
+  CSR-7:
+    params:
+      ipv4: 172.31.99.7
+      ipv6: fd00:c1cd:1:99::7
+  CSR-8:
+    params:
+      ipv4: 172.31.99.8
+      ipv6: fd00:c1cd:1:99::8
