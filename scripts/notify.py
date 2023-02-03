@@ -45,7 +45,7 @@ class Notify(object):
         # login to Webex
         self.api = WebexTeamsAPI(access_token=token)
 
-    def notify(self, message, roomid=None, persons=[], result_json=None, attach=None):
+    def notify(self, message, rooms=None, persons=None, result_json=None, attach=None):
         '''
         send notification to rooms and/or persons identified in the config file
         '''
@@ -71,10 +71,18 @@ class Notify(object):
                     print('Exception ignored while processing results: {}'.format(str(e)))
                     pass
 
-        args_given = roomid or len(persons) > 0
+        if rooms is None:
+            rooms = []
+        if persons is None:
+            persons = []
+        args_given = len(rooms) or len(persons)
         if not args_given:
-            if hasattr(self.config.notify, 'room_id'):
-                roomid = self.config.notify.room_id
+            if hasattr(self.config.notify, 'room_ids'):
+                r = self.config.notify.room_ids
+                if isinstance(r, str):
+                    rooms = [r]
+                else:
+                    rooms = r
 
             if hasattr(self.config.notify, 'persons'):
                 p = self.config.notify.persons
@@ -84,8 +92,8 @@ class Notify(object):
                     persons = p
 
         recepients = []
-        if roomid:
-            recepients.append({'roomId': roomid})
+        for r in rooms:
+            recepients.append({'roomId': r})
 
         for p in persons:
             if '@' in p:
@@ -104,23 +112,21 @@ class Notify(object):
             # print('sending to {}, files={}'.format(r, files))
             result = self.api.messages.create(markdown=message, text=message, **r)
             # attach more files via replies to the message
-            while len(attach) > 0:
-                files = [attach.pop(0)]
-                if not os.path.exists(files[0]):
-                    print('File {} doesn\'t exist, ignoring error'.format(files[0]))
+            for file in attach:
+                if not os.path.exists(file):
+                    print('File {} doesn\'t exist, ignoring error'.format(file))
                     continue
 
                 try:
-                    self.api.messages.create(text='', parentId=result.id, files=files, **r)
+                    self.api.messages.create(text='', parentId=result.id, files=[file], **r)
                 except Exception as e:
-                    print('Exception ignored while sending file: {}'.format(str(e)))
-                    pass
+                    print('Exception ignored while sending file {}: {}'.format(file, str(e)))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Notify')
-    parser.add_argument('--room', help='WebexTeams room id to send to')
-    parser.add_argument('--person', help='person ID or email (multiple values can be specified, comma-separated')
+    parser.add_argument('--room', help='WebexTeams room id to send to (multiple values can be specified, comma-separated)')
+    parser.add_argument('--person', help='person ID or email (multiple values can be specified, comma-separated)')
     parser.add_argument('--config', help='config file to use')
     parser.add_argument('--attach', action='append', help='file to attach (repeat to attach more files).')
     parser.add_argument('--results', action='append', help='load results from json file(s), use multiple times for multiple files (default: no result)')
@@ -131,9 +137,13 @@ if __name__ == '__main__':
         persons = args.person.split(',')
     else:
         persons = []
+    if args.room:
+        rooms = args.person.split(',')
+    else:
+        rooms = []
     if not len(args.message):
         print('no message provided')
         sys.exit(1)
 
     notif = Notify(config_file=args.config)
-    notif.notify(' '.join(args.message), roomid=args.room, persons=persons, result_json=args.results, attach=args.attach)
+    notif.notify(' '.join(args.message), rooms=rooms, persons=persons, result_json=args.results, attach=args.attach)

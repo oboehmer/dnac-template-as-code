@@ -19,7 +19,9 @@ show_diffs: False
 
 notify:
   # specify room_id and/or WebexTeams person email
-  # room_id: Y2lzY29zcGFyazovL3VzL1JPT00vMjk3YTljYjAtZGUxZC0xMWU5LThkMzMtNmI0ZWU1YzY0ODQ0
+  # send to CLEMEA 2023 attendee webex room (ends with NjQ4)
+  # room_ids:
+  #   - Y2lzY29zcGFyazovL3VzL1JPT00vYTgzMDE1ODAtYTFhNi0xMWVkLWFlZTEtOGY0ODkwYzJkNjQ4
   persons:
     - '%ENV{GITLAB_USER_EMAIL}'
     # - oboehmer@cisco.com
