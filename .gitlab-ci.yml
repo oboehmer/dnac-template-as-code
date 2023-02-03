@@ -87,7 +87,7 @@ notify_success:
   script:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
     - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
-    - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS  "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" completed successfully ($CI_PIPELINE_URL)"
+    - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS  "✅ Pipeline on branch \"$CI_BUILD_REF_NAME\" triggered by \"$GITLAB_USER_LOGIN\" completed successfully ($CI_PIPELINE_URL)"
 
 notify_failure:
   image: ${RUNNER_IMAGE}
@@ -96,4 +96,4 @@ notify_failure:
   script:
     - ATTACH="" ; for f in tests/out/log.html template-preview.txt  ; do test -f $f && ATTACH="$ATTACH --attach $f"; done; echo $ATTACH
     - RESULTS="" ; for f in results*json ; do test -f $f && RESULTS="$RESULTS --results $f" ; done ; echo $RESULTS
-    - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" failed ($CI_PIPELINE_URL)"
+    - python scripts/notify.py --config $CONFIG_YAML $ATTACH $RESULTS "❌ Pipeline on branch \"$CI_BUILD_REF_NAME\" triggered by \"$GITLAB_USER_LOGIN\" **FAILED** ($CI_PIPELINE_URL)"
